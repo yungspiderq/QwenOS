@@ -249,7 +249,7 @@ registerApp('terminal', {
       echo: (args) => print(args.join(' ')),
       touch: (args) => {
         if (!args[0]) return print('usage: touch <файл>', 't-err');
-        const dirPath = resolve('.'), parts = fsNormalizePath(dirPath + '/' + args[0]).split('/').filter(Boolean);
+        const parts = fsNormalizePath(cwd + '/' + args[0]).split('/').filter(Boolean);
         const fname = parts.pop();
         const dir = fsGetNode('/' + parts.join('/'));
         if (dir && dir.type === 'dir') { dir.children[fname] = dir.children[fname] || { type:'file', content:'' }; fsSave(); print('создан: '+fname,'t-ok'); }
