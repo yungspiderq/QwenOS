@@ -380,7 +380,7 @@ const OS = (() => {
       buildDesktopIcons();
       if (localStorage.getItem('webos_widget') !== '0') buildWidget();
       initBattery();
-      setTimeout(() => notify('WebOS 1.0', `Добро пожаловать! Двойной клик по иконке — запуск приложения. Совет: Ctrl+Alt+T открывает терминал.`, 6000), 600);
+            setTimeout(() => notify('QwenOS 2.0 Aurora', `Добро пожаловать! 🎆 Новинки: Музыка, Погода, Заметки, Таймер, Аркада (5 игр), Магазин скинов. Ctrl+Alt+T — терминал. Работает офлайн как приложение!`, 7000), 600);
     };
     $('#login-btn').onclick = doLogin;
     $('#login-input').onkeydown = e => { if (e.key === 'Enter') doLogin(); };
@@ -441,6 +441,7 @@ const OS = (() => {
 
   // применяем тему сразу (не дожидаясь boot)
   if (getTheme() === 'light') document.body.classList.add('light');
+  { const tt = $('#tray-theme'); if (tt) tt.textContent = getTheme() === 'light' ? '☀️' : '🌙'; }
 
   // переключатель темы в трее
   document.addEventListener('click', e => {

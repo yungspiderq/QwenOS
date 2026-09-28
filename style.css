@@ -436,3 +436,5 @@ body.skin-glass #taskbar { background:rgba(255,255,255,.15); backdrop-filter:blu
 /* Кнопки выбора темы в Настройках */
 .th-btn { padding:8px 16px; border-radius:8px; border:1px solid #3a4257; background:#1b2130; color:#fff; cursor:pointer; margin-right:8px; }
 .th-btn.active, .th-btn:hover { background:#4da3ff; border-color:#4da3ff; }
+#tray-theme { cursor:pointer; user-select:none; }
+#btn-shutdown:hover { background:#e8564d; border-color:#e8564d; }
