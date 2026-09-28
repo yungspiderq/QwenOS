@@ -186,3 +186,6 @@ registerApp('shop', {
     work();
   }
 });
+
+/* экспорт для других модулей */
+window.Money = Money;
