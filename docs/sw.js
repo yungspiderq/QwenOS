@@ -1,5 +1,5 @@
-/* QwenOS Service Worker — офлайн-кэш v5 (структура public/, network-first) */
-const CACHE = "qwenos-v5";
+/* QwenOS Service Worker — офлайн-кэш v6 (структура public/, network-first) */
+const CACHE = "qwenos-v6";
 const ASSETS = [
   './', 'index.html', 'manifest.webmanifest',
   'css/style.css', 'assets/icon.svg',
