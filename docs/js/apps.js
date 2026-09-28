@@ -33,9 +33,9 @@ function fsGetNode(path) {
 function fsSave() { try { localStorage.setItem('webos_fs', JSON.stringify(FS.root)); } catch(e){} }
 function fsLoad() { try { const d = localStorage.getItem('webos_fs'); if (d) FS.root = JSON.parse(d); } catch(e){} }
 
-/* ================= Реестр приложений ================= */
-const Apps = {};
-function registerApp(id, def) { Apps[id] = def; }
+/* ================= Реестр приложений (единственный владелец) ================= */
+window.Apps = window.Apps || {}
+window.registerApp = window.registerApp || function(id, def){ window.Apps[id]=def; };
 
 /* ---------- Блокнот ---------- */
 registerApp('notepad', {

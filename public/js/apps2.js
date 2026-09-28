@@ -363,8 +363,8 @@ registerApp('store', {
 
 /* ---------- Скин «Золото» — покупается только в Steam за 700 🪙 ---------- */
 (function(){
-  const prevOpen = Apps.store.open;
-  Apps.store.open = function(win) {
+  const prevOpen = window.Apps.store.open;
+  window.Apps.store.open = function(win) {
     prevOpen.call(this, win);
     if (window.Money && !Money.owned()['skin-gold']) {
       const card = document.createElement('div');

@@ -1,9 +1,9 @@
-/* QwenOS Service Worker — офлайн-кэш v6 (структура public/, network-first) */
-const CACHE = "qwenos-v6";
+/* QwenOS Service Worker — офлайн-кэш v9 (фикс реестра window.Apps/Games, network-first) */
+const CACHE = "qwenos-v9";
 const ASSETS = [
-  './', 'index.html', 'manifest.webmanifest',
+  './', './', 'manifest.webmanifest',
   'css/style.css', 'assets/icon.svg',
-  'js/games.js', 'js/shop.js', 'js/doom.js',
+  'js/core.js', 'js/games.js', 'js/shop.js', 'js/doom.js',
   'js/apps2.js', 'js/apps.js', 'js/os.js'
 ];
 

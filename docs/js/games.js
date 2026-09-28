@@ -1,12 +1,15 @@
 /* ============ QwenOS Arcade — реестр игр + лаунчер (Steam-подобный) ============ */
-const Games = {};
+/* Реестр Apps — единственный владелец: js/apps.js (const Apps + registerApp).
+   Реестр Games объявлен на window — доступен всем файлам без TDZ-конфликтов. */
+window.Games = {};
 function registerGame(id, def) {
   if (!def.free && !def.price) def.price = 100; // все игры по умолчанию платные
-  Games[id] = def;
+  window.Games[id] = def;
+  Apps[id] = def; // игра доступна и как приложение (иконки/Пуск)
 }
 /* Открытие игры с проверкой покупки через Steam (Money.owned) */
 function openGame(id) {
-  const g = Games[id];
+  const g = window.Games[id];
   if (!g) return OS.openApp(id);
   if (g.free || !window.Money || Money.owned()[id]) return OS.openApp(id);
   const item = (typeof SHOP_ITEMS !== 'undefined') ? SHOP_ITEMS.find(i => i.id === id) : null;
@@ -34,7 +37,7 @@ registerApp('arcade', {
         <div class="ar-grid"></div>
       </div>`;
     const g = win.body.querySelector('.ar-grid');
-    Object.entries(Games).forEach(([id, game]) => {
+    Object.entries(window.Games).forEach(([id, game]) => {
       const owned = window.Money && Money.owned()[id];
       const paid = !game.free;
       const d = document.createElement('div');

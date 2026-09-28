@@ -355,4 +355,4 @@ registerGame('doom', {
 });
 
 /* DOOM доступен и как приложение (иконка на рабочем столе / Пуск) — та же проверка покупки внутри open() */
-registerApp('doom', Games.doom);
+// 'doom' уже зарегистрирован в Apps через registerGame (см. games.js)
