@@ -285,3 +285,154 @@ html, body { height: 100%; overflow: hidden; font-family: "Segoe UI", Roboto, Ar
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: #b6bcc6; border-radius: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ============ QwenOS 2.0: новые обои ============ */
+#wallpaper.wp6 { background: linear-gradient(135deg,#00c6ff,#0072ff); }
+#wallpaper.wp7 { background: linear-gradient(135deg,#f83600,#f9d423); }
+#wallpaper.wp8 { background: radial-gradient(circle at 70% 20%, #2b1055, #7597de), #122; }
+
+/* ============ Светлая тема ============ */
+body.light { --win-bg:#f5f6fa; --win-border:#d5d9e2; --text:#222633; }
+body.light .window { background:#fff; border-color:#d5d9e2; color:#222633; box-shadow:0 8px 30px rgba(0,0,0,.18); }
+body.light .titlebar { background:#eceef4; color:#333; }
+body.light .taskbar, body.light #taskbar { background:rgba(240,242,248,.92); color:#222; }
+body.light #start-menu { background:rgba(248,249,252,.97); color:#222; }
+body.light #start-menu .start-app span, body.light #start-menu button { color:#222; }
+body.light #context-menu { background:#fff; color:#222; }
+body.light #context-menu div:not(.sep):hover { background:#e3ecff; }
+body.light .terminal { background:#f2f4f8; color:#222; }
+body.light .t-line { color:#333; }
+body.light .notepad textarea, body.light .calc-display { background:#fff; color:#222; }
+body.light .ex-side, body.light .set-side { background:#eef1f6; color:#222; }
+body.light .ex-file:hover { background:#dfe9ff; }
+body.light .app-pad { color:#222; }
+body.light .nt-card textarea { color:#333; }
+body.light #tray span { color:#222; }
+body.light #taskbar-time, body.light #taskbar-date { color:#222; }
+
+/* ============ Скины (Магазин) ============ */
+body.skin-neon .window { border:1px solid #f093fb; box-shadow:0 0 18px rgba(240,147,251,.35), 0 8px 30px rgba(0,0,0,.4); }
+body.skin-neon .titlebar { background:linear-gradient(90deg,#7b2ff7,#f093fb); color:#fff; }
+body.skin-neon #taskbar { background:rgba(20,5,40,.85); }
+body.skin-neon .btn, body.skin-neon .gl-bar button, body.skin-neon .paint-tools button { border-color:#f093fb; }
+
+body.skin-retro .window { border-radius:0; border:2px solid #33ff66; background:#001100; color:#33ff66; font-family:'Courier New',monospace; }
+body.skin-retro .titlebar { background:#003300; color:#33ff66; border-radius:0; font-family:'Courier New',monospace; }
+body.skin-retro #taskbar { background:#002200; color:#33ff66; border-top:2px solid #33ff66; border-radius:0; }
+body.skin-retro #start-menu { background:#001a00; border:2px solid #33ff66; color:#33ff66; border-radius:0; }
+body.skin-retro .terminal { background:#000; }
+body.skin-retro * { text-shadow:0 0 4px rgba(51,255,102,.5); }
+
+body.skin-glass .window { background:rgba(255,255,255,.12); backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%); border:1px solid rgba(255,255,255,.35); color:#fff; }
+body.skin-glass .titlebar { background:rgba(255,255,255,.15); color:#fff; }
+body.skin-glass .notepad textarea, body.skin-glass .calc-display { background:rgba(0,0,0,.25); color:#fff; }
+body.skin-glass #taskbar { background:rgba(255,255,255,.15); backdrop-filter:blur(20px); }
+
+/* ============ Стили новых приложений ============ */
+.music { display:flex; flex-direction:column; height:100%; padding:12px; gap:10px; }
+.mu-viz { width:100%; height:90px; background:#0d1117; border-radius:10px; }
+.mu-now { display:flex; justify-content:space-between; align-items:center; }
+.mu-title { font-size:18px; font-weight:700; }
+.mu-sub { color:#8891a5; font-size:12px; }
+.mu-controls { display:flex; gap:10px; align-items:center; justify-content:center; }
+.mu-controls button { font-size:20px; padding:8px 16px; border-radius:50%; border:none; background:#2b3244; color:#fff; cursor:pointer; }
+.mu-controls button:hover { background:#4da3ff; }
+.mu-vol { flex:1; max-width:160px; }
+.mu-list { flex:1; overflow:auto; }
+.mu-item { padding:8px 12px; border-radius:8px; cursor:pointer; }
+.mu-item:hover { background:#2b3244; }
+.mu-item.active { background:linear-gradient(90deg,#4da3ff33,#f093fb33); font-weight:600; }
+.mu-item small { float:right; color:#8891a5; }
+
+.notes { display:flex; flex-direction:column; height:100%; }
+.nt-toolbar { padding:10px; display:flex; align-items:center; gap:12px; }
+.nt-toolbar button { padding:8px 14px; border-radius:8px; border:none; background:#4da3ff; color:#fff; cursor:pointer; }
+.nt-count { color:#8891a5; font-size:13px; }
+.nt-grid { flex:1; overflow:auto; display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; padding:10px; align-content:start; }
+.nt-card { border-radius:10px; padding:8px; display:flex; flex-direction:column; min-height:150px; box-shadow:0 2px 8px rgba(0,0,0,.25); }
+.nt-card textarea { flex:1; border:none; background:transparent; resize:none; outline:none; font:14px/1.4 inherit; color:#333; }
+.nt-foot { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#555; }
+.nt-del { border:none; background:transparent; cursor:pointer; }
+
+.weather { display:flex; flex-direction:column; height:100%; padding:12px; gap:12px; }
+.wt-head { display:flex; gap:8px; }
+.wt-city { flex:1; padding:8px 12px; border-radius:8px; border:1px solid #3a4257; background:#1b2130; color:#fff; }
+.wt-go { padding:8px 16px; border-radius:8px; border:none; background:#4da3ff; color:#fff; cursor:pointer; }
+.wt-body { flex:1; overflow:auto; }
+.wt-loading, .wt-error { padding:30px; text-align:center; color:#8891a5; }
+.wt-main { display:flex; align-items:center; gap:16px; padding:10px; }
+.wt-icon { font-size:56px; }
+.wt-temp { font-size:40px; font-weight:800; }
+.wt-meta { color:#aab4c8; }
+.wt-days { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:10px; }
+.wt-day { background:#1b2130; border-radius:10px; padding:10px 6px; text-align:center; font-size:13px; }
+
+.timers { display:flex; flex-direction:column; align-items:center; height:100%; padding:16px; gap:14px; }
+.tm-tabs { display:flex; gap:8px; }
+.tm-tabs button { padding:8px 14px; border-radius:8px; border:none; background:#2b3244; color:#fff; cursor:pointer; }
+.tm-tabs button.active { background:#4da3ff; }
+.tm-display { font-size:48px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:2px; }
+.tm-setup { display:flex; gap:8px; align-items:center; }
+.tm-setup.hidden { display:none; }
+.tm-setup input { padding:6px; border-radius:6px; border:1px solid #3a4257; background:#1b2130; color:#fff; }
+.tm-btns { display:flex; gap:10px; }
+.tm-btns button { padding:10px 22px; border-radius:10px; border:none; background:#2b3244; color:#fff; cursor:pointer; font-size:15px; }
+.tm-btns .tm-start { background:#4da3ff; }
+
+.snake, .pong, .brickout, .space-game { display:flex; flex-direction:column; align-items:center; height:100%; padding:10px; gap:8px; }
+.sn-score { color:#aab4c8; }
+.sn-canvas, .pg-canvas, .bk-canvas, .sp-canvas { border-radius:8px; background:#0d1117; outline:1px solid #2b3244; }
+.sn-help { font-size:12px; color:#8891a5; }
+
+.ttt { display:flex; flex-direction:column; align-items:center; height:100%; padding:14px; gap:12px; }
+.ttt-status { font-size:16px; font-weight:600; }
+.ttt-grid { display:grid; grid-template-columns:repeat(3,80px); gap:6px; }
+.ttt-cell { width:80px; height:80px; background:#1b2130; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:40px; cursor:pointer; }
+.ttt-cell.filled { cursor:default; }
+.ttt-score { color:#aab4c8; }
+.ttt-new { padding:8px 18px; border-radius:8px; border:none; background:#4da3ff; color:#fff; cursor:pointer; }
+
+.store { padding:16px; overflow:auto; height:100%; }
+.st-note { color:#8891a5; font-size:13px; margin-bottom:12px; }
+.st-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
+.st-card { background:#1b2130; border-radius:12px; padding:14px; text-align:center; border:1px solid transparent; }
+.st-card.owned { border-color:#4da3ff; }
+.st-icon { font-size:34px; }
+.st-name { font-weight:700; margin:6px 0; }
+.st-desc { font-size:12px; color:#8891a5; min-height:32px; }
+.st-card button { margin-top:8px; padding:7px 16px; border-radius:8px; border:none; background:#4da3ff; color:#fff; cursor:pointer; }
+.st-card.owned button { background:#2ecc71; }
+
+.arcade { padding:16px; overflow:auto; height:100%; }
+.ar-note { color:#8891a5; font-size:13px; margin-bottom:12px; }
+.ar-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+.ar-card { background:#1b2130; border-radius:12px; padding:16px; text-align:center; cursor:pointer; transition:transform .12s; }
+.ar-card:hover { transform:translateY(-3px); background:#232b3d; }
+.ar-icon { font-size:36px; }
+.ar-name { font-weight:700; margin:8px 0 4px; }
+.ar-desc { font-size:12px; color:#8891a5; }
+
+.game2048 { display:flex; flex-direction:column; align-items:center; height:100%; padding:12px; gap:10px; }
+.g20-head { display:flex; gap:14px; align-items:center; }
+.g20-board { display:grid; grid-template-columns:repeat(4,72px); gap:8px; background:#1b2130; padding:8px; border-radius:10px; }
+.g20-cell { width:72px; height:72px; border-radius:8px; background:#262e40; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; }
+.g20-new { padding:6px 12px; border-radius:8px; border:none; background:#4da3ff; color:#fff; cursor:pointer; }
+
+.flags { display:flex; flex-direction:column; align-items:center; height:100%; padding:16px; gap:14px; }
+.fl-score { color:#aab4c8; }
+.fl-flag { font-size:90px; line-height:1.2; }
+.fl-opts { display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; max-width:340px; }
+.fl-opts button { padding:10px; border-radius:10px; border:none; background:#2b3244; color:#fff; cursor:pointer; font-size:15px; }
+.fl-opts button.ok { background:#2ecc71; }
+.fl-opts button.bad { background:#e8564d; }
+.fl-msg { min-height:22px; font-weight:600; }
+
+/* Экран выключения */
+#shutdown-screen { position:fixed; inset:0; z-index:12000; background:#05070f; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; color:#cfd6e4; }
+#shutdown-screen.hidden { display:none; }
+#shutdown-back { padding:12px 26px; border-radius:10px; border:1px solid #3a4257; background:#1b2130; color:#fff; font-size:16px; cursor:pointer; }
+#shutdown-back:hover { background:#4da3ff; }
+
+/* Кнопки выбора темы в Настройках */
+.th-btn { padding:8px 16px; border-radius:8px; border:1px solid #3a4257; background:#1b2130; color:#fff; cursor:pointer; margin-right:8px; }
+.th-btn.active, .th-btn:hover { background:#4da3ff; border-color:#4da3ff; }

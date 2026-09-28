@@ -278,7 +278,7 @@ const OS = (() => {
   }
 
   /* ---------- Иконки рабочего стола ---------- */
-  const desktopIcons = ['explorer', 'notepad', 'terminal', 'browser', 'paint', 'calc', 'mines', 'life', 'settings', 'trash'];
+  const desktopIcons = ['explorer', 'notepad', 'terminal', 'browser', 'music', 'weather', 'notes', 'timer', 'arcade', 'store', 'paint', 'calc', 'mines', 'snake', 'settings', 'trash'];
   function buildDesktopIcons() {
     const box = $('#icons');
     box.innerHTML = '';
@@ -317,6 +317,24 @@ const OS = (() => {
       b.addEventListener('levelchange', upd);
       b.addEventListener('chargingchange', upd);
     }).catch(()=>{});
+  }
+
+  /* ---------- Завершение работы ---------- */
+  function shutdown() {
+    fsSave();
+    hideStartMenu();
+    $('#desktop').classList.add('hidden');
+    const scr = $('#shutdown-screen');
+    const txt = $('#shutdown-text');
+    const back = $('#shutdown-back');
+    if (!scr) return;
+    scr.classList.remove('hidden');
+    back.classList.add('hidden');
+    txt.textContent = 'Завершение работы...';
+    setTimeout(() => {
+      txt.textContent = 'Питание отключено';
+      back.classList.remove('hidden');
+    }, 1800);
   }
 
   /* ---------- BSOD ---------- */
@@ -358,6 +376,7 @@ const OS = (() => {
       $('#login-screen').classList.add('hidden');
       $('#desktop').classList.remove('hidden');
       setWallpaper(localStorage.getItem('webos_wp') || 'wp1');
+      if (window.Skins) Skins.apply(Skins.current()); // восстановить скин из Магазина
       buildDesktopIcons();
       if (localStorage.getItem('webos_widget') !== '0') buildWidget();
       initBattery();
@@ -371,6 +390,10 @@ const OS = (() => {
     $('#start-search').oninput = e => renderStartMenu(e.target.value);
     $('#btn-lock').onclick = lock;
     $('#btn-restart').onclick = () => location.reload();
+    const btnShut = $('#btn-shutdown');
+    if (btnShut) btnShut.onclick = shutdown;
+    const shutBack = $('#shutdown-back');
+    if (shutBack) shutBack.onclick = () => { $('#shutdown-screen').classList.add('hidden'); $('#desktop').classList.remove('hidden'); };
     $('#bsod-ok').onclick = () => { $('#bsod').classList.add('hidden'); notify('Система', 'BSOD пережит успешно 😄'); };
     $('#tray-volume').onclick = () => { setSound(!soundOn); $('#tray-volume').textContent = soundOn ? '🔊' : '🔇'; notify('Звук', soundOn ? 'Звуки включены' : 'Звуки отключены'); };
 
@@ -397,11 +420,35 @@ const OS = (() => {
 
     // закрытие последнего окна через Alt+F4-подобное поведение невозможно в браузере — но предупредим при уходе
     window.addEventListener('beforeunload', fsSave);
+
+    // PWA: офлайн-режим
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+    }
   }
 
   document.readyState === 'loading'
     ? document.addEventListener('DOMContentLoaded', boot)
     : boot();
 
-  return { openApp, notify, contextMenu, bsod, lock, setWallpaper, setWidget, setSound, get soundOn(){return soundOn;}, windows };
+  // ---- темы оформления (тёмная/светлая) ----
+  function setTheme(t) {
+    document.body.classList.toggle('light', t === 'light');
+    localStorage.setItem('webos_theme', t);
+    const tt = $('#tray-theme'); if (tt) tt.textContent = t === 'light' ? '☀️' : '🌙';
+  }
+  function getTheme() { return localStorage.getItem('webos_theme') || 'dark'; }
+
+  // применяем тему сразу (не дожидаясь boot)
+  if (getTheme() === 'light') document.body.classList.add('light');
+
+  // переключатель темы в трее
+  document.addEventListener('click', e => {
+    if (e.target.closest('#tray-theme')) {
+      setTheme(getTheme() === 'dark' ? 'light' : 'dark');
+      notify('Оформление', getTheme() === 'light' ? 'Светлая тема ☀️' : 'Тёмная тема 🌙');
+    }
+  });
+
+  return { openApp, notify, contextMenu, bsod, lock, setWallpaper, setWidget, setSound, setTheme, getTheme, get soundOn(){return soundOn;}, windows };
 })();

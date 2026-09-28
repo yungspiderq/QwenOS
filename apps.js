@@ -748,6 +748,11 @@ registerApp('settings', {
           if (t.dataset.w === cur) t.classList.add('active');
           t.onclick = () => { OS.setWallpaper(t.dataset.w); main.querySelectorAll('.wp-thumb').forEach(x=>x.classList.remove('active')); t.classList.add('active'); };
         });
+        const th = OS.getTheme ? OS.getTheme() : 'dark';
+        main.querySelectorAll('.th-btn').forEach(b => {
+          b.classList.toggle('active', b.dataset.th === th);
+          b.onclick = () => { OS.setTheme(b.dataset.th); main.querySelectorAll('.th-btn').forEach(x=>x.classList.toggle('active', x===b)); };
+        });
       },
       system() {
         main.innerHTML = `<h2>Система</h2>
