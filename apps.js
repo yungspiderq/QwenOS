@@ -186,8 +186,33 @@ registerApp('explorer', {
                 if (nn && nn !== name) { node.children[nn] = node.children[name]; delete node.children[name]; fsSave(); go(cwd); }
               }},
             { sep: true },
-            { label: 'Удалить', fn: () => {
-                if (confirm(`Удалить «${name}»?`)) { delete node.children[name]; fsSave(); go(cwd); }
+            { label: '📋 Копировать в…', fn: () => {
+                const dest = prompt('Папка назначения:', '/Документы');
+                if (!dest) return;
+                const dnode = fsGetNode(fsNormalizePath(dest));
+                if (!dnode || dnode.type !== 'dir') return OS.notify('Проводник', 'Папка не найдена: ' + dest);
+                let nn2 = name, i = 1;
+                while (dnode.children[nn2]) nn2 = name.replace(/(\.[^.]+)?$/, ` copy${i++}$1`);
+                dnode.children[nn2] = JSON.parse(JSON.stringify(child));
+                fsSave();
+                OS.notify('Проводник', `Скопировано: ${dest}/${nn2}`);
+              }},
+            { label: '✂️ Вырезать → вставить в…', fn: () => {
+                const dest = prompt('Переместить в папку:', '/Документы');
+                if (!dest) return;
+                const dnode = fsGetNode(fsNormalizePath(dest));
+                if (!dnode || dnode.type !== 'dir') return OS.notify('Проводник', 'Папка не найдена: ' + dest);
+                dnode.children[name] = child; delete node.children[name];
+                fsSave();
+                OS.notify('Проводник', `Перемещено в ${dest}`);
+              }},
+            { sep: true },
+            { label: '🗑 Удалить', fn: () => {
+                if (confirm(`Удалить «${name}»?`)) {
+                  try { const tr = JSON.parse(localStorage.getItem('webos_trash')||'[]'); tr.push({name, node: child, from: cwd, date: new Date().toLocaleString('ru-RU')}); localStorage.setItem('webos_trash', JSON.stringify(tr)); } catch(e){}
+                  delete node.children[name]; fsSave(); go(cwd);
+                  OS.notify('Проводник', `«${name}» перемещён в Корзину 🗑`);
+                }
               }}
           ]);
         };
@@ -209,7 +234,7 @@ registerApp('terminal', {
     const input = win.body.querySelector('input');
     const promptEl = win.body.querySelector('.t-prompt');
     const history = []; let hIdx = -1;
-    function setPrompt(){ promptEl.textContent = `user@webos:${cwd}$`; }
+    function setPrompt(){ promptEl.textContent = `user@qwenos:${cwd}$`; }
     function print(text, cls='') {
       const d = document.createElement('div');
       d.className = 't-line ' + cls; d.textContent = text;
@@ -225,7 +250,7 @@ registerApp('terminal', {
       return fsNormalizePath(p.startsWith('/') ? p : cwd + '/' + p);
     }
     const commands = {
-      help: () => print('Команды: help, ls [путь], cd <путь>, pwd, cat <файл>, echo <текст>, touch <файл>,\nmkdir <папка>, rm <имя>, clear, date, whoami, uname, tree [путь], neofetch, open <приложение>, bsod'),
+      help: () => print('Команды: help, ls [путь], cd <путь>, pwd, cat <файл>, echo <текст> [> файл], touch <файл>,\n  mkdir <папка>, rm <имя>, cp <откуда> <куда>, mv <откуда> <куда>, df, history,\n  calc <выражение>, clear, date, whoami, uname, tree [путь], neofetch, matrix, theme,\n  say <текст>, open <приложение>, exit, bsod'),
       ls: (args) => {
         const node = fsGetNode(resolve(args[0]));
         if (!node) return print('ls: путь не найден', 't-err');
@@ -246,7 +271,66 @@ registerApp('terminal', {
         if (node && node.type === 'file') print(node.content);
         else print('cat: файл не найден', 't-err');
       },
-      echo: (args) => print(args.join(' ')),
+      echo: (args) => {
+        const line = args.join(' ');
+        const gi = line.indexOf('>');
+        if (gi >= 0) {
+          const text = line.slice(0, gi).trim();
+          const fp = resolve(line.slice(gi+1).trim());
+          const parts = fp.split('/').filter(Boolean); const fname = parts.pop();
+          const dir = fsGetNode('/' + parts.join('/'));
+          if (!dir || dir.type!=='dir') return print('echo: папка не найдена', 't-err');
+          dir.children[fname] = { type:'file', content: (dir.children[fname]&&dir.children[fname].content||'') + (dir.children[fname]? '\n':'') + text };
+          fsSave(); return print('записано в ' + fname, 't-ok');
+        }
+        print(line);
+      },
+      cp: (args) => {
+        if (args.length < 2) return print('usage: cp <откуда> <куда>', 't-err');
+        const a = fsGetNode(resolve(args[0])), bPath = resolve(args[1]);
+        if (!a || a.type !== 'file') return print('cp: файл-источник не найден', 't-err');
+        const parts = bPath.split('/').filter(Boolean); const fname = parts.pop();
+        const dir = fsGetNode('/' + parts.join('/'));
+        if (!dir || dir.type !== 'dir') return print('cp: папка назначения не найдена', 't-err');
+        dir.children[fname] = JSON.parse(JSON.stringify(a)); fsSave(); print('скопировано: ' + fname, 't-ok');
+      },
+      mv: (args) => {
+        if (args.length < 2) return print('usage: mv <откуда> <куда>', 't-err');
+        const aPath = resolve(args[0]), a = fsGetNode(aPath), bPath = resolve(args[1]);
+        if (!a) return print('mv: не найдено: ' + args[0], 't-err');
+        const ap = aPath.split('/').filter(Boolean); const aname = ap.pop();
+        const srcDir = fsGetNode('/' + ap.join('/'));
+        const parts = bPath.split('/').filter(Boolean); const fname = parts.pop();
+        const dir = fsGetNode('/' + parts.join('/'));
+        if (!dir || dir.type !== 'dir') return print('mv: папка назначения не найдена', 't-err');
+        dir.children[fname] = a; delete srcDir.children[aname]; fsSave(); print('перемещено: ' + fname, 't-ok');
+      },
+      df: () => {
+        const used = new Blob([JSON.stringify(FS.root)]).size;
+        print('Файловая система (localStorage):\n  занято: ' + (used/1024).toFixed(1) + ' КБ\n  доступно: ~' + Math.max(0,(5120-used/1024)).toFixed(0) + ' КБ');
+      },
+      history: () => print(history.slice().reverse().map((h,i)=>String(i+1).padStart(3,' ')+'  '+h).join('\n') || '(история пуста)'),
+      calc: (args) => {
+        const expr = args.join('');
+        if (!/^[-+*/%(). 0-9]+$/.test(expr)) return print('calc: разрешены только числа и + - * / % ( )', 't-err');
+        try { const r = Function('"use strict";return ('+expr+')')(); print(expr + ' = ' + r, 't-ok'); }
+        catch(e){ print('calc: ' + e.message, 't-err'); }
+      },
+      matrix: () => {
+        out.innerHTML = '';
+        let n = 0;
+        const iv = setInterval(() => {
+          if (!document.body.contains(term) || n++ > 60) { clearInterval(iv); print('matrix: stop', 't-info'); return; }
+          let s = ''; for (let i=0;i<70;i++) s += Math.random()<0.5 ? String.fromCharCode(0x30A0+Math.floor(Math.random()*96)) : ' ';
+          print(s, 't-ok');
+        }, 60);
+      },
+      theme: (args) => {
+        const t = args[0];
+        if (t === 'dark' || t === 'light') { OS.setTheme(t); print('тема: ' + (t==='dark'?'тёмная':'светлая'), 't-ok'); }
+        else print('usage: theme dark|light', 't-err');
+      },
+      say: (args) => { try { const u = new SpeechSynthesisUtterance(args.join(' ')); u.lang='ru-RU'; speechSynthesis.speak(u); print('говорю: ' + args.join(' '), 't-ok'); } catch(e){ print('say: не поддерживается', 't-err'); } },
       touch: (args) => {
         if (!args[0]) return print('usage: touch <файл>', 't-err');
         const parts = fsNormalizePath(cwd + '/' + args[0]).split('/').filter(Boolean);
@@ -290,24 +374,30 @@ registerApp('terminal', {
         if (Apps[id]) { OS.openApp(id); print('запуск: ' + Apps[id].name, 't-ok'); }
         else print('open: приложение не найдено. Доступны: ' + Object.keys(Apps).join(', '), 't-err');
       },
-      neofetch: () => print(
-`        ____          user@webos
-       / __ \  -----  OS: WebOS 1.0 HTML Edition
-      / /_/ /  Host: ${navigator.userAgent.includes('Firefox')?'Firefox Browser':'Browser'}
-     / _, _/   Kernel: JS ${new Date().getFullYear()}
-    /_/ |_| \\__\\  Uptime: ${Math.floor(performance.now()/1000)} c
-                 Shell: websh 1.0
-                 DE: WebDesktop
-                 Resolution: ${window.innerWidth}x${window.innerHeight}
-                 CPU: ${navigator.hardwareConcurrency||'?'} vCPU
-                 Memory: ${(navigator.deviceMemory||'?')} GB`),
-      bsod: () => { OS.bsod(); }
+      neofetch: () => print([
+        '   ________  __    __  ___    _______. _______ .______     ____    ____  _______',
+        '  |   \\  \\  /  |  |  /   \\  /       ||   ____  |   _  \\    \\   \\  /   / |   ____|',
+        '  |    \\  \\/   /  | /  ^  \\ |   (---- |  |___  |  |_)  |    \\   \\/   /  |  |__',
+        '  |  .  \\      /  |/  /_\\  \\ \\   \\    |   ___| |      /      \\      /   |   __|',
+        '  |  |\\  \\    /  /  _____  \\.____)   |  |     |  |\\  \\----.  \\    /  |  |____',
+        '  |__| \\__\\__/  /__/     \\__\\_______/|__|     | _| `._____|  \\__/   |_______|',
+        '                 user@qwenos',
+        '                 OS: QwenOS 2.0 «Aurora» (HTML Edition)',
+        `                 Host: ${navigator.userAgent.includes('Firefox')?'Firefox Browser':'Browser'}`,
+        `                 Kernel: JS ${new Date().getFullYear()} · Uptime: ${Math.floor(performance.now()/1000)} c`,
+        `                 Shell: websh 2.0 · Apps: ${Object.keys(Apps).length}`,
+        `                 Theme: ${OS.getTheme ? OS.getTheme() : 'dark'} · Skin: ${localStorage.getItem('qwenos_skin')||'default'}`,
+        `                 Resolution: ${window.innerWidth}x${window.innerHeight}`,
+        `                 CPU: ${navigator.hardwareConcurrency||'?'} vCPU · Memory: ${(navigator.deviceMemory||'?')} GB`
+      ].join('\n')),
+      bsod: () => { OS.bsod(); },
+      exit: () => { print('до встречи 👋', 't-info'); setTimeout(()=>OS.closeWindow(win), 300); }
     };
 
     input.onkeydown = (e) => {
       if (e.key === 'Enter') {
         const line = input.value;
-        print(`user@webos:${cwd}$ ${line}`);
+        print(`user@qwenos:${cwd}$ ${line}`);
         input.value = '';
         if (line.trim()) {
           history.unshift(line); hIdx = -1;
@@ -644,8 +734,14 @@ registerApp('settings', {
             <div class="wp-thumb wp3" data-w="wp3"></div>
             <div class="wp-thumb wp4" data-w="wp4"></div>
             <div class="wp-thumb wp5" data-w="wp5"></div>
+            <div class="wp-thumb wp6" data-w="wp6"></div>
+            <div class="wp-thumb wp7" data-w="wp7"></div>
+            <div class="wp-thumb wp8" data-w="wp8"></div>
           </div>
-          <p style="margin-top:14px;color:#666;font-size:13px">Текущие обои сохраняются между перезагрузками.</p>`;
+          <h3 style="margin-top:16px">Тема оформления</h3>
+          <button class="th-btn" data-th="dark">🌙 Тёмная</button>
+          <button class="th-btn" data-th="light">☀️ Светлая</button>
+          <p style="margin-top:14px;color:#666;font-size:13px">Текущие обои и тема сохраняются между перезагрузками.</p>`;
         const cur = localStorage.getItem('webos_wp') || 'wp1';
         main.querySelectorAll('.wp-thumb').forEach(t => {
           t.classList.add(t.dataset.w);
