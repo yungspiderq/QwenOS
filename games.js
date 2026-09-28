@@ -1,6 +1,27 @@
-/* ============ QwenOS Arcade — реестр игр + лаунчер ============ */
+/* ============ QwenOS Arcade — реестр игр + лаунчер (Steam-подобный) ============ */
 const Games = {};
-function registerGame(id, def) { Games[id] = def; }
+function registerGame(id, def) {
+  if (!def.free && !def.price) def.price = 100; // все игры по умолчанию платные
+  Games[id] = def;
+}
+/* Открытие игры с проверкой покупки через Steam (Money.owned) */
+function openGame(id) {
+  const g = Games[id];
+  if (!g) return OS.openApp(id);
+  if (g.free || !window.Money || Money.owned()[id]) return OS.openApp(id);
+  const item = (typeof SHOP_ITEMS !== 'undefined') ? SHOP_ITEMS.find(i => i.id === id) : null;
+  const price = item ? item.price : g.price;
+  if (confirm(`🎮 «${g.name}» — платная игра за ${Money.fmt(price)}.\nКупить сейчас в Steam?`)) {
+    if (Money.spend(price)) {
+      Money.own(id, price);
+      OS.notify('🎮 Steam', `${g.name} куплена! Приятной игры 🎉`);
+      OS.openApp(id);
+    } else {
+      OS.notify('🎮 Steam', `Недостаточно средств (${Money.fmt(price)}). Заработайте 🪙 в разделе «💼 Заработать».`);
+      OS.openApp('shop');
+    }
+  }
+}
 
 /* ---------- Лаунчер «Аркада» ---------- */
 registerApp('arcade', {
@@ -9,15 +30,19 @@ registerApp('arcade', {
     win.body.innerHTML = `
       <div class="arcade">
         <h2>🕹️ QwenOS Arcade</h2>
-        <p class="ar-note">Выберите игру — она откроется в новом окне.</p>
+        <p class="ar-note">Бесплатные игры — сразу, 🔒 платные — покупай в Steam 🎮</p>
         <div class="ar-grid"></div>
       </div>`;
     const g = win.body.querySelector('.ar-grid');
     Object.entries(Games).forEach(([id, game]) => {
+      const owned = window.Money && Money.owned()[id];
+      const paid = !game.free;
       const d = document.createElement('div');
-      d.className = 'ar-card';
-      d.innerHTML = `<div class="ar-icon">${game.icon}</div><div class="ar-name">${game.name}</div><div class="ar-desc">${game.desc||''}</div>`;
-      d.onclick = () => OS.openApp(id);
+      d.className = 'ar-card' + (paid && !owned ? ' locked' : '');
+      d.innerHTML = `<div class="ar-icon">${game.icon}</div><div class="ar-name">${game.name}</div>
+        <div class="ar-desc">${game.desc||''}</div>
+        <div class="ar-badge">${!paid ? 'FREE' : owned ? '✅ КУПЛЕНО' : '🔒 ' + ((SHOP_ITEMS.find(i=>i.id===id)||{price:game.price}).price) + ' 🪙'}</div>`;
+      d.onclick = () => openGame(id);
       g.appendChild(d);
     });
   }
@@ -25,7 +50,7 @@ registerApp('arcade', {
 
 /* ---------- 2048 ---------- */
 registerGame('g2048', {
-  name: '2048', icon: '🔢', desc: 'Сдвигай плитки и собери 2048!',
+  name: '2048', icon: '🔢', desc: 'Сдвигай плитки и собери 2048!', free: true,
   open(win) {
     win.body.innerHTML = `
       <div class="game2048">
@@ -83,7 +108,7 @@ registerGame('g2048', {
 
 /* ---------- Понг vs AI ---------- */
 registerGame('pong', {
-  name: 'Понг', icon: '🏓', desc: 'Классика: вы против ИИ',
+  name: 'Понг', icon: '🏓', desc: 'Классика: вы против ИИ', free: true,
   open(win) {
     win.body.innerHTML=`
       <div class="pong">
@@ -127,7 +152,7 @@ registerGame('pong', {
 
 /* ---------- Арканоид ---------- */
 registerGame('breakout', {
-  name: 'Арканоид', icon: '🧱', desc: 'Разбей все кирпичи',
+  name: 'Арканоид', icon: '🧱', desc: 'Разбей все кирпичи', free: true,
   open(win) {
     win.body.innerHTML=`
       <div class="brickout">
@@ -178,7 +203,7 @@ registerGame('breakout', {
 
 /* ---------- Космос (shooter) ---------- */
 registerGame('space', {
-  name: 'Космос', icon: '🚀', desc: 'Отстреливай астероиды',
+  name: 'Космос', icon: '🚀', desc: 'Отстреливай астероиды', free: true,
   open(win) {
     win.body.innerHTML=`
       <div class="space-game">
@@ -229,7 +254,7 @@ registerGame('space', {
 
 /* ---------- Флаги (викторина) ---------- */
 registerGame('flags', {
-  name: 'Флаги', icon: '🏳️', desc: 'Угадай страну по флагу',
+  name: 'Флаги', icon: '🏳️', desc: 'Угадай страну по флагу', free: true,
   open(win) {
     const DATA=[["🇦🇩","Андорра"],["🇦🇪","ОАЭ"],["🇦🇷","Аргентина"],["🇦🇺","Австралия"],["🇦🇹","Австрия"],["🇦🇿","Азербайджан"],["🇦🇴","Ангола"],["🇧🇪","Бельгия"],["🇧🇬","Болгария"],["🇧🇷","Бразилия"],["🇧🇾","Беларусь"],["🇨🇦","Канада"],["🇨🇭","Швейцария"],["🇨🇱","Чили"],["🇨🇳","Китай"],["🇨🇴","Колумбия"],["🇨🇿","Чехия"],["🇩🇪","Германия"],["🇩🇰","Дания"],["🇪🇸","Испания"],["🇫🇮","Финляндия"],["🇫🇷","Франция"],["🇬🇧","Великобритания"],["🇬🇪","Грузия"],["🇭🇷","Хорватия"],["🇭🇺","Венгрия"],["🇮🇩","Индонезия"],["🇮🇪","Ирландия"],["🇮🇳","Индия"],["🇮🇸","Исландия"],["🇮🇹","Италия"],["🇯🇵","Япония"],["🇰🇿","Казахстан"],["🇱🇹","Литва"],["🇱🇻","Латвия"],["🇲🇦","Марокко"],["🇲🇨","Монако"],["🇲🇩","Молдова"],["🇲🇪","Черногория"],["🇲🇰","Северная Македония"],["🇳🇱","Нидерланды"],["🇳🇴","Норвегия"],["🇳🇿","Новая Зеландия"],["🇵🇪","Перу"],["🇵🇱","Польша"],["🇵🇹","Португалия"],["🇷🇴","Румыния"],["🇷🇸","Сербия"],["🇷🇺","Россия"],["🇸🇦","Саудовская Аравия"],["🇸🇪","Швеция"],["🇸🇮","Словения"],["🇸🇰","Словакия"],["🇹🇭","Таиланд"],["🇹🇷","Турция"],["🇺🇦","Украина"],["🇺🇾","Уругвай"],["🇺🇸","США"],["🇿🇦","ЮАР"]];
     win.body.innerHTML=`

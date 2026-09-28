@@ -3,7 +3,7 @@ const FS = {
   root: {
     'Рабочий стол': { type: 'dir', children: {} },
     'Документы': { type: 'dir', children: {
-      'readme.txt': { type: 'file', content: 'Добро пожаловать в WebOS!\n\nЭто операционная система, полностью написанная на HTML, CSS и JavaScript.\n\nВозможности:\n - Оконный менеджер (перетаскивание, ресайз, свернуть/развернуть)\n - Виртуальная файловая система (сохраняется в localStorage)\n - Терминал с командами: help, ls, cd, cat, echo, touch, mkdir, rm, clear, neofetch, date, whoami, tree\n - Приложения: Блокнот, Калькулятор, Проводник, Рисовалка, Сапёр, Игра «Жизнь», Часы, Браузер, Настройки\n - Меню Пуск, уведомления, контекстные меню, экран блокировки\n\nПриятного пользования! 🎉' },
+      'readme.txt': { type: 'file', content: 'Добро пожаловать в QwenOS!\n\nЭто операционная система, полностью написанная на HTML, CSS и JavaScript.\n\nВозможности:\n - Оконный менеджер (перетаскивание, ресайз, свернуть/развернуть)\n - Виртуальная файловая система (сохраняется в localStorage)\n - Терминал с командами: help, ls, cd, cat, echo, touch, mkdir, rm, clear, neofetch, date, whoami, tree\n - Приложения: Блокнот, Калькулятор, Проводник, Рисовалка, Сапёр, Игра «Жизнь», Часы, Браузер, Настройки\n - Меню Пуск, уведомления, контекстные меню, экран блокировки\n\nПриятного пользования! 🎉' },
       'секрет.txt': { type: 'file', content: 'Здесь был кот 🐈' }
     }},
     'Изображения': { type: 'dir', children: {} },
@@ -240,7 +240,7 @@ registerApp('terminal', {
       d.className = 't-line ' + cls; d.textContent = text;
       out.appendChild(d); term.scrollTop = term.scrollHeight;
     }
-    print('WebOS Terminal 1.0 — введите "help" для списка команд.', 't-info');
+    print('QwenOS Terminal 2.1 — введите "help" для списка команд.', 't-info');
     setPrompt();
     setTimeout(()=>input.focus(), 50);
     term.onclick = () => input.focus();
@@ -355,7 +355,7 @@ registerApp('terminal', {
       clear: () => { out.innerHTML = ''; },
       date: () => print(new Date().toString()),
       whoami: () => print('user'),
-      uname: () => print('WebOS 1.0 (HTML Edition) browser-kernel x86-js'),
+      uname: () => print('QwenOS 2.1 Aurora (HTML Edition) browser-kernel x86-js'),
       tree: (args) => {
         function walk(p, depth) {
           const node = fsGetNode(p);
@@ -699,7 +699,7 @@ registerApp('about', {
   open(win) {
     win.body.innerHTML = `
       <div class="app-pad about-box">
-        <h2 style="margin-bottom:8px">WebOS 1.0 <span style="color:#4da3ff">«HTML Edition»</span></h2>
+        <h2 style="margin-bottom:8px">QwenOS 2.1 <span style="color:#4da3ff">«Aurora» HTML Edition</span></h2>
         Полноценная демонстрация ОС в браузере.<br>
         Ядро: <code>JavaScript ES2020</code> · Оболочка: <code>DOM + CSS Grid/Flex</code><br>
         Файловая система: <code>localStorage</code><br><br>

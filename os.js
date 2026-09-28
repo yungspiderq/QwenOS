@@ -155,7 +155,7 @@ const OS = (() => {
 
   function openApp(appId, params) {
     const def = Apps[appId];
-    if (!def) { notify('WebOS', 'Приложение не найдено: ' + appId); return; }
+    if (!def) { notify('QwenOS', 'Приложение не найдено: ' + appId); return; }
     hideStartMenu();
     createWindow(appId, def, params);
   }
@@ -278,7 +278,7 @@ const OS = (() => {
   }
 
   /* ---------- Иконки рабочего стола ---------- */
-  const desktopIcons = ['explorer', 'notepad', 'terminal', 'browser', 'music', 'weather', 'notes', 'timer', 'arcade', 'store', 'paint', 'calc', 'mines', 'snake', 'settings', 'trash'];
+  const desktopIcons = ['explorer', 'notepad', 'terminal', 'browser', 'music', 'weather', 'notes', 'timer', 'arcade', 'shop', 'doom', 'store', 'paint', 'calc', 'mines', 'snake', 'settings', 'trash'];
   function buildDesktopIcons() {
     const box = $('#icons');
     box.innerHTML = '';
@@ -295,6 +295,18 @@ const OS = (() => {
     }
   }
 
+  /* ---------- Кошелёк в трее ---------- */
+  function addMoneyWidget() {
+    if (document.getElementById('tray-money')) return;
+    const tray = $('#tray');
+    const span = document.createElement('span');
+    span.id = 'tray-money'; span.className = 'money-hud'; span.title = 'Баланс Steam-монет — кликни, чтобы открыть Steam';
+    span.style.cursor = 'pointer';
+    span.onclick = () => openApp('shop');
+    tray.insertBefore(span, tray.firstChild);
+    if (window.Money && document.getElementById("tray-money")) Money.renderHUD();
+  }
+
   /* ---------- Часы ---------- */
   function tickClock() {
     const now = new Date();
@@ -303,6 +315,7 @@ const OS = (() => {
     const lt = $('#login-time'), ld = $('#login-date');
     if (lt) { lt.textContent = now.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
               ld.textContent = now.toLocaleDateString('ru-RU', {weekday:'long', day:'numeric', month:'long'}); }
+    if (window.Money && document.getElementById("tray-money")) Money.renderHUD();
   }
 
   /* ---------- Батарея ---------- */
@@ -377,10 +390,11 @@ const OS = (() => {
       $('#desktop').classList.remove('hidden');
       setWallpaper(localStorage.getItem('webos_wp') || 'wp1');
       if (window.Skins) Skins.apply(Skins.current()); // восстановить скин из Магазина
+      addMoneyWidget();
       buildDesktopIcons();
       if (localStorage.getItem('webos_widget') !== '0') buildWidget();
       initBattery();
-            setTimeout(() => notify('QwenOS 2.0 Aurora', `Добро пожаловать! 🎆 Новинки: Музыка, Погода, Заметки, Таймер, Аркада (5 игр), Магазин скинов. Ctrl+Alt+T — терминал. Работает офлайн как приложение!`, 7000), 600);
+            setTimeout(() => notify('QwenOS 2.1 Aurora', `Добро пожаловать! 🎆 Новинки: Steam 🎮 (игры за 🪙), DOOM 👹, Аркада, Музыка, Погода. Зарабатывай монеты в «💼 Заработать»!`, 7000), 600);
     };
     $('#login-btn').onclick = doLogin;
     $('#login-input').onkeydown = e => { if (e.key === 'Enter') doLogin(); };

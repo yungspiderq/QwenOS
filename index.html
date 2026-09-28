@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QwenOS — операционная система в браузере</title>
 <meta name="theme-color" content="#4da3ff">
-<meta name="description" content="QwenOS 2.0 «Aurora» — веб-ОС на чистом HTML/CSS/JS: окна, терминал, приложения, тёмная тема, виджеты.">
+<meta name="description" content="QwenOS 2.1 «Aurora» — веб-ОС на чистом HTML/CSS/JS: окна, терминал, приложения, Steam с играми за монеты, DOOM, тёмная тема, виджеты.">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css?v=2.1">
 </head>
 <body>
 
@@ -16,7 +17,7 @@
   <div class="boot-logo">
     <div class="logo-cube"><span></span><span></span><span></span><span></span></div>
     <h1>Qwen<span>OS</span></h1>
-    <p>Версия 2.0 · «Aurora» Edition</p>
+    <p>Версия 2.1 · «Aurora» Edition</p>
   </div>
   <div class="boot-progress"><div id="boot-bar"></div></div>
 </div>
@@ -96,9 +97,11 @@
   </div>
 </div>
 
-<script src="games.js"></script>
-<script src="apps2.js"></script>
-<script src="apps.js"></script>
-<script src="os.js"></script>
+<script src="games.js?v=2.1"></script>
+<script src="shop.js?v=2.1"></script>
+<script src="doom.js?v=2.1"></script>
+<script src="apps2.js?v=2.1"></script>
+<script src="apps.js?v=2.1"></script>
+<script src="os.js?v=2.1"></script>
 </body>
 </html>

@@ -324,7 +324,7 @@ registerApp('tictactoe', {
 const Skins = {
   current() { return localStorage.getItem('qwenos_skin')||'default'; },
   apply(id) {
-    document.body.classList.remove('skin-neon','skin-retro','skin-glass');
+    document.body.classList.remove('skin-neon','skin-retro','skin-glass','skin-gold');
     if (id!=='default') document.body.classList.add('skin-'+id);
     localStorage.setItem('qwenos_skin', id);
   }
@@ -353,10 +353,28 @@ registerApp('store', {
         <button>${cur===it.id?'✓ Активен':'Купить · 0₽'}</button>`;
       d.querySelector('button').onclick=()=>{
         Skins.apply(it.id);
-        OS.notify('🛍️ Магазин', it.id==='default'?'Восстановлен стандартный стиль':`Скин «${it.name}» применён! ✨`);
+        OS.notify('🛍️ Темы', it.id==='default'?'Восстановлен стандартный стиль':`Скин «${it.name}» применён! ✨`);
         g.querySelectorAll('.st-card').forEach((x,i)=>{ const isCur=all[i].id===it.id; x.classList.toggle('owned',isCur); x.querySelector('button').textContent=isCur?'✓ Активен':'Купить · 0₽'; });
       };
       g.appendChild(d);
     });
   }
 });
+
+/* ---------- Скин «Золото» — покупается только в Steam за 700 🪙 ---------- */
+(function(){
+  const prevOpen = Apps.store.open;
+  Apps.store.open = function(win) {
+    prevOpen.call(this, win);
+    if (window.Money && !Money.owned()['skin-gold']) {
+      const card = document.createElement('div');
+      card.className = 'st-card';
+      card.innerHTML = `<div class="st-icon">👑</div><div class="st-name">Золото <small style="color:#e8564d">EXCLUSIVE · Steam</small></div>
+        <div class="st-desc">Роскошная золотая тема. Доступна только после покупки в Steam за ${Money.fmt(700)}.</div>
+        <button>🔒 Купить в Steam</button>`;
+      card.querySelector('button').onclick = () => OS.openApp('shop');
+      const g = win.body.querySelector('.st-grid');
+      if (g) g.appendChild(card);
+    }
+  };
+})();
