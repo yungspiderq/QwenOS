@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WebOS — операционная система в браузере</title>
+<title>QwenOS — операционная система в браузере</title>
+<meta name="theme-color" content="#4da3ff">
+<meta name="description" content="QwenOS 2.0 «Aurora» — веб-ОС на чистом HTML/CSS/JS: окна, терминал, приложения, тёмная тема, виджеты.">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,8 +15,8 @@
 <div id="boot-screen">
   <div class="boot-logo">
     <div class="logo-cube"><span></span><span></span><span></span><span></span></div>
-    <h1>Web<span>OS</span></h1>
-    <p>Версия 1.0 · HTML Edition</p>
+    <h1>Qwen<span>OS</span></h1>
+    <p>Версия 2.0 · «Aurora» Edition</p>
   </div>
   <div class="boot-progress"><div id="boot-bar"></div></div>
 </div>
@@ -53,6 +56,7 @@
     <div class="start-footer">
       <button id="btn-lock" title="Блокировка">🔒 Заблокировать</button>
       <button id="btn-restart" title="Перезагрузка">🔄 Перезагрузка</button>
+      <button id="btn-shutdown" title="Завершение работы">⏻ Выключение</button>
     </div>
   </div>
 
@@ -67,6 +71,13 @@
     <button id="bsod-ok">Перезагрузить</button>
   </div>
 
+  <!-- Экран выключения -->
+  <div id="shutdown-screen" class="hidden">
+    <div class="logo-cube"><span></span><span></span><span></span><span></span></div>
+    <h2 id="shutdown-text">Завершение работы...</h2>
+    <button id="shutdown-back" class="hidden">⏻ Включить</button>
+  </div>
+
   <!-- Панель задач -->
   <div id="taskbar">
     <button id="start-btn" title="Пуск">
@@ -75,7 +86,8 @@
     <div id="taskbar-items"></div>
     <div id="tray">
       <span id="tray-battery" title="Заряд батареи">🔋</span>
-      <span id="tray-volume" title="Громкость">🔊</span>
+      <span id="tray-volume" title="Звук вкл/выкл">🔊</span>
+      <span id="tray-theme" title="Тёмная/светлая тема">🌙</span>
       <div id="clock">
         <div id="taskbar-time"></div>
         <div id="taskbar-date"></div>
@@ -84,6 +96,8 @@
   </div>
 </div>
 
+<script src="games.js"></script>
+<script src="apps2.js"></script>
 <script src="apps.js"></script>
 <script src="os.js"></script>
 </body>
