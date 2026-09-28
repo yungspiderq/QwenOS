@@ -1,7 +1,7 @@
 {
   "name": "QwenOS — операционная система в браузере",
   "short_name": "QwenOS",
-  "description": "QwenOS 2.0 Aurora — веб-ОС на чистом HTML/CSS/JS: окна, терминал, приложения, игры, темы.",
+  "description": "QwenOS 2.2 Aurora — веб-ОС на чистом HTML/CSS/JS: окна, терминал, приложения, игры, темы.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -9,6 +9,6 @@
   "theme_color": "#4da3ff",
   "lang": "ru",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }
