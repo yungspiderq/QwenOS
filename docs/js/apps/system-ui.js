@@ -170,10 +170,16 @@
 
         update(w) {
           const U = OS.updater;
+          const isFile = location.protocol === 'file:';
           w.insertAdjacentHTML('beforeend', h('Центр обновлений'));
+          if (isFile) {
+            w.insertAdjacentHTML('beforeend', '<div class="set-note" style="border-color:color-mix(in srgb, var(--warn) 45%, transparent);background:color-mix(in srgb, var(--warn) 12%, transparent)">' + OS.svg('info', 14) + '<div>Копия открыта с диска (<code>file://</code>): браузер запрещает запросы обновлений и service worker. Система работает, но новые версии сюда не прилетят. Откройте онлайн-версию или поднимите локальный сервер: <code>python3 -m http.server</code> в папке <code>docs/</code>.</div></div>');
+          }
           const box = OS.el('div', { class: 'set-box' });
           const last = U.lastCheck ? OS.fmtDateTime(U.lastCheck) : 'ещё не выполнялась';
           box.innerHTML =
+            row('Способ запуска', isFile ? 'Локальный файл file:// — обновления и SW недоступны' : 'Веб-сервер: ' + location.origin,
+              isFile ? '<button class="btn btn-sm btn-accent" data-act="online">Открыть онлайн</button>' : '<span class="chip">' + OS.svg('shield', 12) + ' http(s)</span>') +
             row('Текущая сборка', 'QwenOS ' + OS.version + ' · канал ' + ((U.remote && U.remote.channel) || 'stable'), '<b>' + U.current.build + '</b>') +
             row('Последняя проверка', last, U.checking ? '<span class="chip">идёт…</span>' : '<button class="btn btn-sm" data-act="chk">' + OS.svg('refresh', 14) + ' Проверить</button>') +
             row('Доступно обновление', U.pending ? ('сборка ' + U.pending.build) : 'нет', U.pending ? '<button class="btn btn-sm btn-accent" data-act="inst">Установить</button>' : '<span class="chip">' + OS.svg('shield', 12) + ' всё актуально</span>') +
@@ -190,6 +196,8 @@
           const ib = box.querySelector('[data-act="inst"]');
           if (ib) ib.onclick = () => U.install(U.pending);
           box.querySelector('[data-act="demo"]').onclick = () => U.demo();
+          const on = box.querySelector('[data-act="online"]');
+          if (on) on.onclick = () => window.open(U.liveUrl, '_blank', 'noopener');
           w.insertAdjacentHTML('beforeend', '<div class="set-note">' + OS.svg('info', 14) + ' Обновления распространяются через GitHub Pages: система сравнивает номер сборки в <code>version.json</code> и, если он больше текущего, предлагает установку. Файлы предварительно загружаются в кэш service worker, поэтому перезапуск почти мгновенный.</div>');
         },
 
@@ -269,7 +277,7 @@
             row('Исходный код', 'github.com/yungspiderq/QwenOS', '<button class="btn btn-sm" data-act="gh">Открыть</button>');
           w.append(box);
           box.querySelector('[data-act="gh"]').onclick = () => window.open('https://github.com/yungspiderq/QwenOS', '_blank', 'noopener');
-          w.insertAdjacentHTML('beforeend', '<div class="set-note">' + OS.svg('heart', 14) + ' Сделано на чистом HTML, CSS и JavaScript — без единой внешней зависимости, без сборки и без серверной части. Откройте <code>index.html</code> — и система запустится.</div>');
+          w.insertAdjacentHTML('beforeend', '<div class="set-note">' + OS.svg('heart', 14) + '<div>Сделано на чистом HTML, CSS и JavaScript — без единой внешней зависимости, без сборки и без серверной части. Откройте <code>index.html</code> — и система запустится.</div></div>');
         }
       };
 

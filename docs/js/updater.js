@@ -16,7 +16,10 @@
     'js/apps/system.js', 'js/apps/system-ui.js', 'js/apps/productivity.js', 'js/apps/media.js', 'js/apps/games.js'
   ];
 
+  const LIVE_URL = 'https://yungspiderq.github.io/QwenOS/';
+
   const Updater = {
+    liveUrl: LIVE_URL,
     current: { version: OS.version, build: OS.buildNumber || 0 },
     remote: null,
     pending: null,
@@ -65,11 +68,32 @@
         }
         return null;
       } catch (e) {
-        if (!opts.silent) OS.toast('Проверка не удалась', 'Не удалось связаться с сервером обновлений: ' + String(e.message || e), { icon: 'x', timeout: 4200 });
+        const d = this.diagnose(e);
+        const show = (t) => OS.toast(t.title, t.text, {
+          icon: t.icon, timeout: 7000,
+          onClick: t.url ? () => window.open(t.url, '_blank', 'noopener') : undefined
+        });
+        if (!opts.silent) show(d);
+        else if (d.severe && !this._warned) { this._warned = true; show(d); }
         return null;
       } finally {
         this.checking = false;
       }
+    },
+
+    /* почему не удалось провериться: file://, офлайн или сервер недоступен */
+    diagnose(e) {
+      if (location.protocol === 'file:') {
+        return {
+          severe: true, icon: 'info', url: LIVE_URL,
+          title: 'Обновления с диска недоступны (file://)',
+          text: 'Копия открыта локальным файлом: браузер запрещает fetch и service worker. Нажмите, чтобы открыть онлайн-версию, или запустите папку через локальный сервер (python3 -m http.server), или обновите копию: git pull'
+        };
+      }
+      if (!navigator.onLine) {
+        return { severe: false, icon: 'wifi', title: 'Нет сети', text: 'QwenOS работает офлайн, но проверить обновления невозможно' };
+      }
+      return { severe: false, icon: 'x', title: 'Проверка не удалась', text: 'Не удалось связаться с сервером обновлений: ' + String(e.message || e) };
     },
 
     /* сигнал от service worker: появился новый SW */
