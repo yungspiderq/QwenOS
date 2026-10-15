@@ -10,7 +10,7 @@
     codename: 'Aurora',
     kernel: 'qwen-kernel 6.1.0-web',
     build: new Date().toISOString().slice(0, 10),
-    buildNumber: 3023,
+    buildNumber: 3024,
     startedAt: Date.now()
   };
   global.OS = OS;
@@ -168,7 +168,7 @@
     uiScale: 1, motion: true, sound: true, volume: 0.5, muted: false,
     user: 'user', avatarText: 'Q', clock24: true, widgets: ['clock', 'weather'],
     installed: [], pinned: ['browser', 'steam'],
-    desktopIcons: true, tips: true, bootFast: false
+    desktopIcons: true, tips: true, bootFast: false, invertMouse: false
   };
 
   const Settings = {
@@ -386,6 +386,35 @@
   };
   OS.coins = Coins;
 
+  /* ------------------------------------------------------------------ банк */
+  const Bank = {
+    balance() { return Store.get('bank.balance', 0) || 0; },
+    history() { return Store.get('bank.history', []) || []; },
+    _push(n, src) {
+      const h = this.history();
+      h.unshift({ t: Date.now(), n: n, src: src || 'операция' });
+      Store.set('bank.history', h.slice(0, 80));
+    },
+    deposit(n, src) {
+      n = Math.floor(n || 0);
+      if (n <= 0) return this.balance();
+      Store.set('bank.balance', this.balance() + n);
+      this._push(n, src);
+      Bus.emit('bank', this.balance());
+      return this.balance();
+    },
+    toSteam(n) {
+      n = Math.floor(n || 0);
+      if (n <= 0 || this.balance() < n) return false;
+      Store.set('bank.balance', this.balance() - n);
+      this._push(-n, 'перевод в Steam');
+      Coins.add(n);
+      Bus.emit('bank', this.balance());
+      return true;
+    }
+  };
+  OS.bank = Bank;
+
   /* ------------------------------------------------------------ app registry */
   const Apps = {
     _list: new Map(),
@@ -396,7 +425,7 @@
         name: def.id, icon: 'box', color: '#7c5cff', color2: '#22d3ee',
         width: 760, height: 480, minWidth: 320, minHeight: 200,
         desktop: true, category: 'Прочее', singleton: false, resizable: true, keywords: '',
-        storeOnly: false, premium: 0, noStart: false
+        storeOnly: false, premium: 0, noStart: false, price: 0
       }, def));
       if (prev) Bus.emit('app:updated', def.id);
       Bus.emit('app:registered', def.id);
@@ -432,6 +461,18 @@
       Settings.set('installed', extra);
       Settings.set('pinned', (Settings.get('pinned') || []).filter((x) => x !== id));
       Bus.emit('apps:changed');
+    },
+    cost(app) { return (app && (app.price || app.premium)) || 0; },
+    buy(id) {
+      const a = this.get(id);
+      if (!a) return { ok: false, error: 'нет такого приложения' };
+      if (this.installed(id)) return { ok: true, already: true };
+      const cost = this.cost(a);
+      if (!cost) { this.install(id); return { ok: true, free: true }; }
+      if (!OS.coins.spend(cost)) return { ok: false, error: 'coins', cost: cost };
+      this.install(id);
+      OS.bus.emit('apps:bought', id);
+      return { ok: true, paid: cost };
     },
     tileStyle(app) {
       const c2 = app.color2 || app.color;

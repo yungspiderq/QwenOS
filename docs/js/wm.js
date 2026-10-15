@@ -21,7 +21,17 @@
     open(appId, params) {
       const app = OS.Apps.get(appId);
       if (!app) { OS.toast('Ошибка', 'Приложение «' + appId + '» не найдено', { icon: 'x', color: 'linear-gradient(135deg,#ef4444,#f97316)' }); return null; }
-      if (!OS.Apps.installed(appId)) { OS.Apps.install(appId); }
+      if (!OS.Apps.installed(appId)) {
+        const cost = OS.Apps.cost(app);
+        if (cost) {
+          OS.toast('Приложение платное', app.name + ' стоит ' + cost + ' монет. Купите в Steam или QwenStore; монеты зарабатываются в Банке (раздел «Работа»)', {
+            icon: 'coin', timeout: 6500, onClick: () => this.open('steam')
+          });
+          OS.sfx.play('error');
+          return null;
+        }
+        OS.Apps.install(appId);
+      }
 
       if (app.singleton) {
         const ex = this.windows.find((w) => w.appId === appId);

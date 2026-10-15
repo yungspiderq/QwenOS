@@ -30,6 +30,7 @@ async def main():
             await page.wait_for_timeout(1300)
             n_icons = await page.evaluate("document.querySelectorAll('#desktop-icons .dicon').length")
             (ok if n_icons == 4 else bad)(f'default desktop has 4 icons (got {n_icons})')
+            await page.evaluate("QwenOS.coins.add(5000); ['terminal','notes','calculator','snake','mines','game2048','breakout','qwen3d','paint','music'].forEach((id) => QwenOS.Apps.buy(id))")
             # закрыть приветствие первого запуска, если открылось
             await page.evaluate("QwenOS.wm.closeAll()")
             await page.wait_for_timeout(300)
@@ -213,6 +214,33 @@ async def main():
             (ok if prem else bad)('store: premium hidden from QwenStore')
             await page.evaluate("QwenOS.wm.closeAll()")
 
+            # ---- 11e. банк: зарплата и перевод в Steam
+            await page.evaluate("QwenOS.bank.deposit(150, 'тест')")
+            await page.evaluate("QwenOS.wm.open('bank')")
+            await page.wait_for_timeout(600)
+            bal0 = await page.evaluate("QwenOS.bank.balance()")
+            c0 = await page.evaluate("QwenOS.coins.get()")
+            await page.click('.win.focused [data-t="100"]')
+            await page.wait_for_timeout(500)
+            bal1 = await page.evaluate("QwenOS.bank.balance()")
+            c1 = await page.evaluate("QwenOS.coins.get()")
+            (ok if bal1 == bal0 - 100 and c1 == c0 + 100 else bad)(f'bank: transfer 100 to Steam ({bal0}->{bal1}, {c0}->{c1})')
+            await page.click('.win.focused .bnk-tabs [data-t="work"]')
+            await page.wait_for_timeout(400)
+            jobs = await page.evaluate("document.querySelectorAll('.win.focused .bnk-job').length")
+            (ok if jobs == 3 else bad)(f'bank: 3 jobs listed ({jobs})')
+            await page.click('.win.focused [data-job="courier"]')
+            await page.wait_for_timeout(700)
+            cell = page.locator('.win.focused .bnk-cell.on')
+            if await cell.count():
+                await cell.click()
+                await page.wait_for_timeout(300)
+                shifting = await page.evaluate("QwenOS.wm.byApp('bank')[0].data.state.shift")
+                (ok if shifting else bad)('bank: courier shift runs')
+            else:
+                bad('bank: courier target not found')
+            await page.evaluate("QwenOS.wm.closeAll()")
+
             # ---- 12. пуск: поиск + Enter
             await page.click('#start-btn')
             await page.wait_for_timeout(400)
@@ -316,7 +344,19 @@ async def main():
             await page.wait_for_timeout(1000)
             apt = await page.evaluate("!!document.querySelector('.apt canvas')")
             (ok if apt else bad)('apartment: scene mounted')
-            await page.keyboard.down('w'); await page.wait_for_timeout(500); await page.keyboard.up('w')
+            dot = await page.evaluate("""(() => {
+              const v = new THREE.Vector3(); QwenOS.apartment.debug.camera.getWorldDirection(v);
+              const P = QwenOS.apartment.debug.P; const f = [v.x, v.z]; const p0 = [P.x, P.z];
+              return new Promise((res) => {
+                document.dispatchEvent(new KeyboardEvent('keydown', { key: 'w' }));
+                setTimeout(() => {
+                  document.dispatchEvent(new KeyboardEvent('keyup', { key: 'w' }));
+                  const d = [P.x - p0[0], P.z - p0[1]]; const n = Math.hypot(d[0], d[1]) || 1e-9;
+                  res((d[0] / n) * f[0] + (d[1] / n) * f[1]);
+                }, 700);
+              });
+            })()""")
+            (ok if dot > 0.9 else bad)(f'apartment: W идёт по взгляду (dot={round(dot, 2)})')
             await page.keyboard.press('Escape')
             await page.wait_for_timeout(600)
             left = await page.evaluate("window.__aptLeft && !document.querySelector('.apt')")

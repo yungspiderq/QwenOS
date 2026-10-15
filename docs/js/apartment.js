@@ -23,7 +23,7 @@
         '<div class="apt-hud">' +
           '<b>Квартира · 23:47</b><br>' +
           'Компьютер выключен. В комнате тихо гудит холодильник.<br><br>' +
-          '<span class="k">W A S D</span> ходить · <span class="k">мышь</span> осматриваться<br>' +
+          '<span class="k">W A S D</span> ходить и стрейф · <span class="k">← →</span> поворот · <span class="k">мышь</span> обзор<br>' +
           '<span class="k">E</span> взаимодействовать · <span class="k">Esc</span> выход' +
         '</div>' +
         '<button class="btn btn-sm apt-exit">Выйти (Esc)</button>' +
@@ -139,9 +139,10 @@
       const chair = furn(.62, .12, .62, 0x2b3145, DX, .48, DZ + 1.05);
       box(.6, .7, .1, 0x2b3145, DX, .85, DZ + 1.34);
       // кровать слева
-      furn(2.0, .42, 3.1, 0x33415e, -RW / 2 + 1.35, .21, -RD / 2 + 1.9);
-      box(1.9, .16, 2.9, 0x8aa0c8, -RW / 2 + 1.35, .5, -RD / 2 + 1.9);
-      box(1.5, .14, .5, 0xe6ecf7, -RW / 2 + 1.35, .6, -RD / 2 + .75);
+      // кровать — у левой стены, в дальнем от входной двери углу
+      furn(2.0, .42, 3.1, 0x33415e, -RW / 2 + 1.35, .21, 1.7);
+      box(1.9, .16, 2.9, 0x8aa0c8, -RW / 2 + 1.35, .5, 1.7);
+      box(1.5, .14, .5, 0xe6ecf7, -RW / 2 + 1.35, .6, 1.7 + 1.15);
       // диван у входа
       furn(2.6, .5, .95, 0x503a63, -1.6, .25, RD / 2 - .8);
       box(2.6, .8, .22, 0x503a63, -1.6, .65, RD / 2 - .38);
@@ -171,7 +172,7 @@
       knob.position.set(-RW / 2 + .14, 1.0, -1.85); scene.add(knob);
 
       /* ------------------------------------------------- игрок */
-      const P = { x: -.4, z: 1.15, yaw: 2.4, pitch: -.05, bob: 0 };
+      const P = { x: -.4, z: 1.15, yaw: -.7, pitch: -.05, bob: 0 };
       const keys = {};
       let drag = false, lx = 0, ly = 0, fading = false;
 
@@ -185,8 +186,10 @@
         const v = e.type === 'keydown';
         if (k === 'w' || k === 'ц' || k === 'arrowup') keys.up = v;
         if (k === 's' || k === 'ы' || k === 'arrowdown') keys.down = v;
-        if (k === 'a' || k === 'ф' || k === 'arrowleft') keys.left = v;
-        if (k === 'd' || k === 'в' || k === 'arrowright') keys.right = v;
+        if (k === 'a' || k === 'ф') keys.strafeL = v;
+        if (k === 'd' || k === 'в') keys.strafeR = v;
+        if (k === 'arrowleft') keys.left = v;
+        if (k === 'arrowright') keys.right = v;
       };
       document.addEventListener('keydown', onKey);
       document.addEventListener('keyup', onKey);
@@ -194,8 +197,9 @@
       cv.addEventListener('pointerdown', (e) => { drag = true; lx = e.clientX; ly = e.clientY; });
       cv.addEventListener('pointermove', (e) => {
         if (!drag) return;
-        P.yaw -= (e.clientX - lx) * .0042;
-        P.pitch = OS.clamp(P.pitch - (e.clientY - ly) * .0026, -.7, .7);
+        const inv = OS.settings.get('invertMouse') ? -1 : 1;
+        P.yaw -= (e.clientX - lx) * .0042 * inv;
+        P.pitch = OS.clamp(P.pitch - (e.clientY - ly) * .0026 * inv, -.7, .7);
         lx = e.clientX; ly = e.clientY;
       });
       addEventListener('pointerup', () => { drag = false; });
@@ -222,6 +226,7 @@
       }
       function cleanup() {
         Apt.active = false;
+        Apt.debug = null;
         document.removeEventListener('keydown', onKey);
         document.removeEventListener('keyup', onKey);
         cancelAnimationFrame(raf);
@@ -236,6 +241,7 @@
       }
       addEventListener('resize', onRs);
 
+      Apt.debug = { get P() { return P; }, get camera() { return camera; } };
       let raf = 0, last = performance.now();
       const step = (t) => {
         raf = requestAnimationFrame(step);
@@ -245,9 +251,13 @@
         if (keys.left) P.yaw += rot;
         if (keys.right) P.yaw -= rot;
         let fx = 0, fz = 0;
-        const dx0 = Math.sin(P.yaw), dz0 = Math.cos(P.yaw);
-        if (keys.up) { fx += dx0; fz += dz0; }
-        if (keys.down) { fx -= dx0; fz -= dz0; }
+        // yaw = camera.rotation.y: вперёд = (-sin, -cos), вправо = (cos, -sin)
+        const fx0 = -Math.sin(P.yaw), fz0 = -Math.cos(P.yaw);
+        const rx0 = Math.cos(P.yaw), rz0 = -Math.sin(P.yaw);
+        if (keys.up) { fx += fx0; fz += fz0; }
+        if (keys.down) { fx -= fx0; fz -= fz0; }
+        if (keys.strafeR) { fx += rx0; fz += rz0; }
+        if (keys.strafeL) { fx -= rx0; fz -= rz0; }
         const len = Math.hypot(fx, fz);
         if (len && !fading) {
           fx = fx / len * sp; fz = fz / len * sp;
@@ -262,7 +272,7 @@
           P.bob += dt * .008;
         }
         camera.position.set(P.x, 1.62 + Math.sin(P.bob) * .028, P.z);
-        camera.rotation.y = -P.yaw + Math.PI;
+        camera.rotation.y = P.yaw;
         camera.rotation.x = P.pitch;
         hint.classList.toggle('hidden', !nearPC() || fading);
         led.material.color.setHex(Math.sin(t * .004) > 0 ? 0x22c55e : 0x14532d);

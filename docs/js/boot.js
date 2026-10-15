@@ -50,6 +50,11 @@
       const h = new Date().getHours();
       const part = h < 5 ? 'Доброй ночи' : h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер';
       OS.toast(part + ', ' + (S.get('user') || 'user') + '!', 'QwenOS ' + OS.version + ' готова к работе', { icon: 'zap', timeout: 5200 });
+      if (!OS.store.get('coinsGift')) {
+        OS.store.set('coinsGift', 1);
+        OS.coins.add(50);
+        setTimeout(() => OS.toast('Стартовый бонус', '+50 монет на кошелёк Steam. Тратьте в Steam или пополняйте через Банк', { icon: 'coin', timeout: 7000 }), 1500);
+      }
       if (!OS.store.get('firstrun')) {
         OS.store.set('firstrun', Date.now());
         setTimeout(() => OS.wm.open('welcome'), 700);

@@ -102,6 +102,7 @@
      ======================================================================= */
   OS.Apps.register({
     id: 'snake',
+    price: 30,
     name: 'Змейка 3D',
     icon: 'snake',
     color: '#22c55e', color2: '#166534',
@@ -253,6 +254,7 @@ width: 640, height: 660, minWidth: 360, minHeight: 440,
      ======================================================================= */
   OS.Apps.register({
     id: 'mines',
+    price: 40,
     name: 'Сапёр 3D',
     icon: 'bomb',
     color: '#ef4444', color2: '#7f1d1d',
@@ -469,6 +471,7 @@ width: 700, height: 680, minWidth: 380, minHeight: 460,
      ======================================================================= */
   OS.Apps.register({
     id: 'game2048',
+    price: 50,
     name: '2048 3D',
     icon: 'hash',
     color: '#f59e0b', color2: '#b91c1c',
@@ -743,6 +746,7 @@ width: 560, height: 680, minWidth: 360, minHeight: 480,
      ======================================================================= */
   OS.Apps.register({
     id: 'breakout',
+    price: 60,
     name: 'Арканоид 3D',
     icon: 'breakout',
     color: '#06b6d4', color2: '#1e3a8a',
@@ -902,6 +906,7 @@ width: 760, height: 660, minWidth: 400, minHeight: 460,
      ======================================================================= */
   OS.Apps.register({
     id: 'qwen3d',
+    price: 100,
     name: 'Qwen3D',
     icon: 'cube',
     color: '#6366f1', color2: '#0f172a',
@@ -1113,8 +1118,9 @@ width: 860, height: 620, minWidth: 400, minHeight: 360,
       renderer.domElement.addEventListener('pointerdown', (e) => { drag = true; lx = e.clientX; ly = e.clientY; });
       renderer.domElement.addEventListener('pointermove', (e) => {
         if (!drag) return;
-        P.yaw -= (e.clientX - lx) * .005;   // тянем мышь вправо — смотрим вправо
-        P.pitch = OS.clamp(P.pitch - (e.clientY - ly) * .003, -.6, .6);
+        const inv = OS.settings.get('invertMouse') ? -1 : 1;
+        P.yaw -= (e.clientX - lx) * .005 * inv;   // тянем мышь вправо — смотрим вправо
+        P.pitch = OS.clamp(P.pitch - (e.clientY - ly) * .003 * inv, -.6, .6);
         lx = e.clientX; ly = e.clientY;
       });
       addEventListener('pointerup', () => { drag = false; });

@@ -38,7 +38,7 @@
               '<button data-t="lib">Библиотека</button>' +
               '<button data-t="prof">Профиль</button>' +
             '</div>' +
-            '<div class="stm-wallet" title="Монеты зарабатываются в играх QwenOS">' + OS.svg('coin', 15) + '<b class="stm-coins">0</b></div>' +
+            '<button class="stm-wallet" title="Кошелёк Steam: нажмите, чтобы пополнить через Банк">' + OS.svg('coin', 15) + '<b class="stm-coins">0</b><span class="stm-plus">+</span></button>' +
           '</div>' +
           '<div class="stm-body"></div>' +
         '</div>';
@@ -50,7 +50,7 @@
       const played = (id) => (OS.store.get(PLAYED_KEY, {}) || {})[id] || 0;
       const bumpPlayed = (id) => { const m = OS.store.get(PLAYED_KEY, {}) || {}; m[id] = (m[id] || 0) + 1; OS.store.set(PLAYED_KEY, m); };
 
-      const priceTag = (a) => a.premium ? a.premium + ' монет' : 'Бесплатно';
+      const priceTag = (a) => OS.Apps.cost(a) ? OS.Apps.cost(a) + ' монет' : 'Бесплатно';
 
       function card(a, extraBtn) {
         const inst = OS.Apps.installed(a.id);
@@ -59,7 +59,7 @@
           '<div class="stm-cap" style="background:linear-gradient(135deg,' + a.color + ',' + (a.color2 || a.color) + ')">' + OS.svg(a.icon, 30) + '</div>' +
           '<div class="stm-ci"><b>' + OS.esc(a.name) + '</b><span>' + OS.esc(a.category) + (a.premium ? ' · премиум' : '') + '</span>' +
           '<p>' + OS.esc(DESC[a.id] || 'Приложение QwenOS.') + '</p></div>' +
-          '<div class="stm-ca">' + (extraBtn || '') + '<span class="stm-price' + (a.premium ? '' : ' free') + '">' + (inst ? 'В библиотеке' : priceTag(a)) + '</span></div>';
+          '<div class="stm-ca">' + (extraBtn || '') + '<span class="stm-price' + (OS.Apps.cost(a) ? '' : ' free') + '">' + (inst ? 'В библиотеке' : priceTag(a)) + '</span></div>';
         return d;
       }
       const DESC = {
@@ -83,18 +83,15 @@
             OS.toast('Steam', 'Запуск «' + a.name + '»', { icon: 'play', timeout: 1800 });
             return;
           }
-          if (a.premium) {
-            if (!OS.coins.spend(a.premium)) {
-              OS.sfx.play('error');
-              return OS.toast('Недостаточно монет', 'Нужно ' + a.premium + ', у вас ' + OS.coins.get() + '. Играйте в игры QwenOS, чтобы заработать: змейка, сапёр, 2048, арканоид, Qwen3D', { icon: 'coin', timeout: 6500 });
-            }
-            OS.Apps.install(a.id);
-            OS.sfx.play('ok');
-            OS.toast('Покупка совершена', '«' + a.name + '» добавлено в библиотеку за ' + a.premium + ' монет', { icon: 'steam' });
-          } else {
-            OS.Apps.install(a.id);
-            OS.toast('Установлено', '«' + a.name + '» уже в библиотеке', { icon: 'download' });
+          const cost = OS.Apps.cost(a);
+          const r = OS.Apps.buy(a.id);
+          if (!r.ok) {
+            OS.sfx.play('error');
+            OS.toast('Недостаточно монет', 'Нужно ' + cost + ', у вас ' + OS.coins.get() + '. Заработайте в Банке (раздел «Работа») и переведите на кошелёк: Банк → «Пополнить Steam»', { icon: 'coin', timeout: 7000, onClick: () => api.open('bank') });
+            return;
           }
+          OS.sfx.play('ok');
+          OS.toast('Покупка совершена', '«' + a.name + '» добавлено в библиотеку' + (cost ? ' за ' + cost + ' монет' : ''), { icon: 'steam' });
           render();
         };
         d.querySelector('.stm-ca').prepend(act);
@@ -113,11 +110,17 @@
             '<div class="stm-hero-art">' + OS.svg('cube', 54) + '</div>' +
             '<div class="stm-hero-tx"><span class="chip">Рекомендуемое</span><h2>' + OS.esc(feat.name) + '</h2>' +
             '<p>Настоящий 3D от первого лица на three.js: блуждайте по лабиринту с факелом, собирайте монеты и побейте рекорд скорости. За прохождение — <b>100 монет</b>.</p>' +
-            '<div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-accent btn-sm" data-feat="1">' + (OS.Apps.installed('qwen3d') ? 'Играть' : 'Установить бесплатно') + '</button>' +
-            '<span class="stm-price free">Бесплатно</span></div></div>';
+            '<div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-accent btn-sm" data-feat="1">' + (OS.Apps.installed('qwen3d') ? 'Играть' : 'Купить за ' + OS.Apps.cost(feat) + ' монет') + '</button>' +
+            '<span class="stm-price">' + OS.Apps.cost(feat) + ' монет · окупается прохождением</span></div></div>';
           hero.querySelector('[data-feat]').onclick = () => {
-            if (!OS.Apps.installed('qwen3d')) OS.Apps.install('qwen3d');
-            else bumpPlayed('qwen3d');
+            if (!OS.Apps.installed('qwen3d')) {
+              const r = OS.Apps.buy('qwen3d');
+              if (!r.ok) {
+                OS.sfx.play('error');
+                OS.toast('Недостаточно монет', 'Qwen3D стоит ' + OS.Apps.cost(feat) + ' монет. Заработайте в Банке (раздел «Работа»)', { icon: 'coin', timeout: 6500, onClick: () => api.open('bank') });
+                return;
+              }
+            } else bumpPlayed('qwen3d');
             api.open('qwen3d'); render();
           };
           body.append(hero);
@@ -188,6 +191,7 @@
         win.setTitle('Steam — ' + ({ store: 'магазин', lib: 'библиотека', prof: 'профиль' })[tab]);
       }
 
+      win.body.querySelector('.stm-wallet').addEventListener('click', () => api.open('bank'));
       win.body.querySelector('.stm-tabs').addEventListener('click', (e) => {
         const b = e.target.closest('[data-t]'); if (!b) return;
         tab = b.dataset.t; render();

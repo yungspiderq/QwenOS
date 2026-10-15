@@ -116,7 +116,8 @@ width: 880, height: 580, minWidth: 460, minHeight: 340,
             row('Виджет «Часы»', 'Крупные часы в правом верхнем углу', '<div class="switch' + ((S.get('widgets') || []).includes('clock') ? ' on' : '') + '" data-widget="clock" role="switch" tabindex="0"></div>') +
             row('Виджет «Погода»', 'Прогноз в реальном времени (симуляция)', '<div class="switch' + ((S.get('widgets') || []).includes('weather') ? ' on' : '') + '" data-widget="weather" role="switch" tabindex="0"></div>') +
             row('Виджет «Система»', 'Загрузка ЦП, память, FPS', '<div class="switch' + ((S.get('widgets') || []).includes('system') ? ' on' : '') + '" data-widget="system" role="switch" tabindex="0"></div>') +
-            row('Подсказки для новичков', 'Показывать советы после входа', sw('tips'));
+            row('Подсказки для новичков', 'Показывать советы после входа', sw('tips')) +
+            row('Инверсия мыши в 3D', 'Перевернуть обзор мышью в Qwen3D и квартире (для любителей flight-sim)', sw('invertMouse'));
           w.append(box);
 
           w.insertAdjacentHTML('beforeend', h('Панель задач — закреплённые приложения'));
@@ -505,9 +506,23 @@ width: 900, height: 600, minWidth: 420, minHeight: 340,
               render();
             };
           } else {
-            act.innerHTML = '<button class="btn btn-sm">' + OS.svg('download', 14) + ' Установить</button><div class="st-prog hidden"><i></i></div>';
+            const cost = OS.Apps.cost(a);
+            act.innerHTML = '<button class="btn btn-sm' + (cost ? '' : ' btn-accent') + '">' + OS.svg(cost ? 'coin' : 'download', 14) + ' ' + (cost ? 'Купить за ' + cost : 'Установить') + '</button><div class="st-prog hidden"><i></i></div>';
             act.querySelector('button').onclick = function () {
-              const btn = this; btn.disabled = true;
+              const btn = this;
+              if (cost) {
+                const r = OS.Apps.buy(a.id);
+                if (!r.ok) {
+                  OS.sfx.play('error');
+                  OS.toast('Недостаточно монет', 'Нужно ' + r.cost + ', у вас ' + OS.coins.get() + '. Заработайте в Банке (раздел «Работа») и переведите на кошелёк Steam', { icon: 'coin', timeout: 6500, onClick: () => api.open('bank') });
+                  return;
+                }
+                OS.sfx.play('ok');
+                OS.toast('Покупка совершена', '«' + a.name + '» за ' + cost + ' монет', { icon: 'steam' });
+                render();
+                return;
+              }
+              btn.disabled = true;
               const prog = act.querySelector('.st-prog'); prog.classList.remove('hidden');
               const bar = prog.querySelector('i');
               let p = 0;

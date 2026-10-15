@@ -110,7 +110,9 @@ function mockCtx(canvas) {
   });
   notes.push('калькулятор: ' + cases.length + ' кейсов пройдено');
 
-  // ---- все приложения
+  // ---- все приложения (платные предварительно покупаем за тестовые монеты)
+  OS.coins.add(100000);
+  OS.Apps.list().forEach((a) => OS.Apps.buy(a.id));
   const apps = OS.Apps.list().filter((a) => !a.hidden);
   let opened = 0;
   for (const a of apps) {

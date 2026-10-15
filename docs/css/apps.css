@@ -675,3 +675,67 @@
 .stm-ach b { display: block; font-size: 12.4px; color: #e8f0f7; }
 .stm-ach span { display: block; font-size: 11px; color: #8f98a0; margin-top: 1px; }
 @media (max-width: 640px) { .stm-hero { flex-direction: column; text-align: center; } .stm-head { flex-wrap: wrap; gap: 8px; } }
+
+/* ======================================================================
+   БАНК
+   ====================================================================== */
+.bnk { height: 100%; display: flex; flex-direction: column; }
+.bnk-head { flex: none; display: flex; align-items: center; gap: 16px; padding: 10px 16px; background: linear-gradient(90deg, #06281a, #0b3b25 55%, #14532d); border-bottom: 1px solid var(--border); }
+.bnk-logo { display: flex; align-items: center; gap: 9px; color: #d9fbe7; }
+.bnk-logo b { font-size: 15.5px; letter-spacing: .04em; }
+.bnk-tabs { display: flex; gap: 4px; }
+.bnk-tabs button { padding: 7px 14px; border-radius: 8px; font-size: 12.6px; color: #9fdcb8; transition: .15s; }
+.bnk-tabs button:hover { background: rgba(255,255,255,.08); color: #fff; }
+.bnk-tabs button.on { background: rgba(255,255,255,.14); color: #fff; box-shadow: inset 0 0 0 1px rgba(134,239,172,.4); }
+.bnk-bal { margin-left: auto; display: flex; align-items: center; gap: 7px; padding: 6px 13px; border-radius: 99px; background: rgba(0,0,0,.35); border: 1px solid rgba(134,239,172,.35); color: #a7f3d0; }
+.bnk-bal svg { color: #e7c540; }
+.bnk-body { flex: 1; overflow-y: auto; padding: 16px 18px 28px; }
+.bnk-h { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--text-faint); font-weight: 700; margin: 18px 0 9px; }
+.bnk-h:first-child { margin-top: 0; }
+.bnk-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 11px; }
+.bnk-card { padding: 15px 17px; border-radius: var(--r-lg); background: linear-gradient(135deg, #14532d, #16a34a); color: #eafff3; box-shadow: 0 12px 30px rgba(0,0,0,.3); }
+.bnk-card.steam-c { background: linear-gradient(135deg, #1b2838, #2a475e); color: #dfeaf3; }
+.bnk-card span { font-size: 11px; opacity: .8; text-transform: uppercase; letter-spacing: .08em; }
+.bnk-card b { display: flex; align-items: center; gap: 8px; font-size: 26px; font-weight: 600; margin: 7px 0 4px; }
+.bnk-card small { font-size: 11px; opacity: .72; }
+.bnk-transfer { display: flex; gap: 8px; flex-wrap: wrap; }
+.bnk-note { margin-top: 18px; display: flex; gap: 9px; padding: 12px 14px; border-radius: var(--r-md); background: color-mix(in srgb, var(--ok) 9%, transparent); border: 1px solid color-mix(in srgb, var(--ok) 26%, transparent); font-size: 12.2px; color: var(--text-dim); line-height: 1.6; }
+.bnk-note svg { flex: none; margin-top: 2px; color: var(--ok); }
+.bnk-note > div { flex: 1; min-width: 0; }
+.bnk-jobs { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 11px; }
+.bnk-job { display: flex; flex-direction: column; gap: 9px; padding: 14px; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--border); transition: .16s var(--ease); }
+.bnk-job:hover { border-color: color-mix(in srgb, var(--ok) 50%, transparent); transform: translateY(-2px); }
+.bnk-job-ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #16a34a, #14532d); }
+.bnk-job-tx b { font-size: 13.6px; }
+.bnk-job-tx .chip { margin: 5px 0 6px; color: #a7f3d0; border-color: rgba(134,239,172,.3); }
+.bnk-job-tx p { margin: 0; font-size: 11.8px; color: var(--text-dim); line-height: 1.55; }
+.bnk-job .btn { margin-top: auto; }
+.bnk-empty { text-align: center; padding: 46px 20px; color: var(--text-faint); }
+.bnk-empty svg { opacity: .3; margin-bottom: 10px; }
+.bnk-hist { display: flex; flex-direction: column; gap: 4px; }
+.bnk-hi { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: var(--r-sm); background: var(--bg-2); border: 1px solid var(--border); font-size: 12.2px; }
+.bnk-hi span { color: var(--text-faint); font-family: var(--font-mono); font-size: 11.2px; flex: none; }
+.bnk-hi i { flex: 1; min-width: 0; color: var(--text-dim); font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bnk-hi b.plus { color: var(--ok); } .bnk-hi b.minus { color: var(--err); }
+.bnk-shift-h { display: flex; align-items: center; gap: 14px; padding: 10px 14px; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--border); margin-bottom: 12px; flex-wrap: wrap; }
+.bnk-shift-h b { font-size: 13.4px; }
+.bnk-shift-h span { font-size: 12px; color: var(--text-dim); }
+.bnk-shift-h .plus { color: var(--ok); }
+.bnk-shift-h button { margin-left: auto; }
+.bnk-courier { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 420px; margin: 0 auto; }
+.bnk-cell { aspect-ratio: 1; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--border); transition: .12s; position: relative; }
+.bnk-cell.on { background: color-mix(in srgb, var(--ok) 30%, transparent); border-color: var(--ok); box-shadow: 0 0 22px color-mix(in srgb, var(--ok) 40%, transparent); }
+.bnk-cell.on::after { content: "📦"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; }
+.bnk-cell.hit { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+.bnk-type { text-align: center; max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.bnk-word { font: 600 34px var(--font-mono); letter-spacing: .04em; color: var(--text); }
+.bnk-type input { text-align: center; font-family: var(--font-mono); font-size: 16px; }
+.bnk-type input.err { border-color: var(--err); box-shadow: 0 0 0 3px color-mix(in srgb, var(--err) 25%, transparent); }
+.bnk-type-st { font-size: 12px; color: var(--text-dim); }
+.bnk-qa pre { display: flex; flex-direction: column; gap: 6px; margin: 0; font-family: var(--font-mono); font-size: 12.6px; }
+.bnk-qa-l { text-align: left; padding: 9px 13px; border-radius: var(--r-sm); background: var(--bg-2); border: 1px solid var(--border); color: var(--text); font-family: var(--font-mono); transition: .12s; white-space: pre-wrap; }
+.bnk-qa-l:hover { border-color: var(--border-strong); }
+.bnk-qa-l.good { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 18%, transparent); }
+.bnk-qa-l.bad { border-color: var(--err); background: color-mix(in srgb, var(--err) 16%, transparent); }
+
+.stm-plus { margin-left: 3px; opacity: .75; font-weight: 700; }
