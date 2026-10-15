@@ -303,7 +303,37 @@
   const customWall = OS.store.get('wall.custom', null);
   if (customWall) S.set('wallpaperReset', false, true);
 
+  /* Если index.html свежий (навигация всегда из сети), а скрипты приехали из
+     старого кэша service worker — версии не совпадут. Убиваем древний SW и
+     перезагружаемся начисто, чтобы рассинхрон не мог жить вечно. */
+  function healStaleAssets() {
+    const meta = document.querySelector('meta[name="qwenos-build"]');
+    const want = meta && String(meta.getAttribute('content') || '').trim();
+    if (!want) return;
+    if (want === String(OS.buildNumber)) {
+      try { sessionStorage.removeItem('qwenos.healed'); } catch (e) { /* noop */ }
+      return;
+    }
+    let flag = '';
+    try { flag = sessionStorage.getItem('qwenos.healed') || ''; } catch (e) { /* noop */ }
+    if (flag === want) {
+      console.warn('[QwenOS] кэш рассинхронизирован даже после сброса SW: обновите принудительно (Ctrl+Shift+R)');
+      return;
+    }
+    try { sessionStorage.setItem('qwenos.healed', want); } catch (e) { /* noop */ }
+    console.warn('[QwenOS] обнаружен устаревший кэш (' + OS.buildNumber + ' != ' + want + ') — сброс service worker и перезагрузка');
+    const done = () => location.reload();
+    try {
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker.getRegistration().then((r) => (r ? r.unregister() : null)).then(done, done);
+        return;
+      }
+    } catch (e) { /* noop */ }
+    done();
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
+    healStaleAssets();
     OS.$('#lock-btn').addEventListener('click', () => {
       const ok = Power.unlock(OS.$('#lock-pass').value);
       if (ok) enterDesktopOnce();

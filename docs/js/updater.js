@@ -59,7 +59,12 @@
         this.remote = r;
         if ((r.build || 0) > this.current.build) {
           this.pending = r;
-          this.showPopup(r);
+          let shownFor = '';
+          try { shownFor = sessionStorage.getItem('qwenos.update.shown') || ''; } catch (e) { /* noop */ }
+          if (!opts.silent || shownFor !== String(r.build)) {
+            try { sessionStorage.setItem('qwenos.update.shown', String(r.build)); } catch (e) { /* noop */ }
+            this.showPopup(r);
+          }
           return r;
         }
         if (!opts.silent) {

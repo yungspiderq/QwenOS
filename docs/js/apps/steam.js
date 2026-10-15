@@ -16,6 +16,18 @@
     keywords: 'steam стим магазин игр библиотека библиотека игр launcher store',
     width: 960, height: 640, minWidth: 480, minHeight: 400,
     mount(win, api) {
+      if (!OS.coins) {
+        win.body.innerHTML = '<div class="gm-fallback" style="height:100%">' + OS.svg('steam', 40) +
+          '<p><b>Кэш браузера рассинхронизирован</b></p>' +
+          '<p class="dim">Часть файлов QwenOS приехала из старого кэша service worker.<br>Нажмите кнопку — система сбросит кэш и перезагрузится.</p>' +
+          '<button class="btn btn-accent btn-sm" data-a="heal">Сбросить кэш и перезагрузить</button></div>';
+        win.body.querySelector('[data-a="heal"]').onclick = () => {
+          const done = () => location.reload();
+          if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then((r) => (r ? r.unregister() : null)).then(done, done);
+          else done();
+        };
+        return;
+      }
       let tab = 'store';
       win.body.innerHTML =
         '<div class="stm">' +

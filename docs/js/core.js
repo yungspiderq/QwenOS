@@ -10,7 +10,7 @@
     codename: 'Aurora',
     kernel: 'qwen-kernel 6.1.0-web',
     build: new Date().toISOString().slice(0, 10),
-    buildNumber: 3022,
+    buildNumber: 3023,
     startedAt: Date.now()
   };
   global.OS = OS;
