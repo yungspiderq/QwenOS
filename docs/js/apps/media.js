@@ -543,8 +543,8 @@
           OS.toast('Обои установлены', it.name, { icon: 'image' });
         } else if (act === 'del') {
           const it = st.items[st.cur]; if (!it || it.kind !== 'file') return;
-          if (!confirm('Удалить «' + it.name + '»?')) return;
-          fs.rm(it.path); OS.bus.emit('fs:changed'); close(); render();
+          if (!confirm('Переместить «' + it.name + '» в Корзину?')) return;
+          fs.trash(it.path); OS.bus.emit('fs:changed'); close(); render();
         }
       });
       win.body.querySelector('.ph-act [data-b="gen"]').onclick = () => {

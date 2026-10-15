@@ -611,7 +611,7 @@
         path: win.params.path || fs.home(),
         hist: [], hi: -1,
         view: OS.store.get('files.view', 'grid'),
-        sel: null, q: ''
+        sel: null, q: '', showHidden: false
       };
       if (!fs.isDir(S.path)) S.path = fs.home();
 
@@ -627,6 +627,7 @@
               '<div class="fm-search"><span></span><input placeholder="Поиск в папке" spellcheck="false"></div>' +
               '<button class="ib" data-a="newfolder" title="Новая папка"></button>' +
               '<button class="ib" data-a="newfile" title="Новый файл"></button>' +
+              '<button class="ib" data-a="hidden" title="Показывать скрытые файлы"></button>' +
               '<button class="ib" data-a="view" title="Вид"></button>' +
             '</div>' +
             '<div class="fm-list"></div>' +
@@ -669,6 +670,10 @@
           b.onclick = () => go(p.path);
           $side.append(b);
         });
+        const tb = OS.el('button', { class: 'fm-place' });
+        tb.innerHTML = OS.svg('trash', 15) + '<span>Корзина</span>';
+        tb.onclick = () => api.open('trash');
+        $side.append(tb);
         const total = 5 * 1024 * 1024, used = fs.du('/');
         $disk.innerHTML = '<div class="fm-disk-bar"><i style="width:' + Math.min(100, used / total * 100).toFixed(1) + '%"></i></div>' +
           '<div class="fm-disk-t">' + OS.fmtBytes(used) + ' из ' + OS.fmtBytes(total) + '</div>';
@@ -701,7 +706,7 @@
       }
 
       function render() {
-        const items = fs.list(S.path).filter((it) => !S.q || it.name.toLowerCase().includes(S.q));
+        const items = fs.list(S.path, S.showHidden).filter((it) => !S.q || it.name.toLowerCase().includes(S.q));
         $list.className = 'fm-list ' + (S.view === 'grid' ? 'grid' : 'rows');
         $list.innerHTML = '';
         if (!items.length) {
@@ -759,9 +764,10 @@
         render(); OS.bus.emit('fs:changed');
       }
       function del(it) {
-        if (!confirm('Удалить «' + it.name + '»' + (it.type === 'dir' ? ' со всем содержимым' : '') + '?')) return;
-        const r = fs.rm(it.path, true);
+        if (!confirm('Удалить «' + it.name + '»? Файл будет перемещён в Корзину.')) return;
+        const r = fs.trash(it.path);
         if (!r.ok) OS.toast('Ошибка', r.error, { icon: 'x' });
+        else OS.toast('Перемещено в Корзину', it.name, { icon: 'trash', timeout: 2400 });
         render(); OS.bus.emit('fs:changed');
       }
       function props(it) {
@@ -797,6 +803,10 @@
         }
       });
       bar.querySelector('[data-a="view"]').innerHTML = OS.svg(S.view === 'grid' ? 'list' : 'grid', 16);
+      const hidBtn = bar.querySelector('[data-a="hidden"]');
+      const hidPaint = () => { hidBtn.innerHTML = OS.svg('eye', 16); hidBtn.style.color = S.showHidden ? 'var(--accent)' : ''; };
+      hidPaint();
+      hidBtn.onclick = () => { S.showHidden = !S.showHidden; hidPaint(); render(); };
 
       win.body.addEventListener('contextmenu', (e) => {
         if (e.target.closest('.fm-item') || e.target.closest('.fm-bar') || e.target.closest('.fm-side')) return;

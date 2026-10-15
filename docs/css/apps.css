@@ -540,3 +540,70 @@
 /* Qwen3D */
 .d3-stage { background: #04060e; }
 .d3-stage canvas { image-rendering: auto; cursor: crosshair; touch-action: none; }
+
+/* ======================================================================
+   3D-игры (three.js)
+   ====================================================================== */
+.gm-3d { display: block; }
+.gm-3d > canvas:not(.gm-minimap) { display: block; width: 100% !important; height: 100% !important; outline: none; }
+.gm-minimap { width: auto !important; height: auto !important; }
+.gm-fallback { display: grid; place-items: center; height: 100%; text-align: center; color: var(--text-faint); padding: 24px; gap: 6px; }
+.gm-fallback svg { opacity: .35; margin-bottom: 6px; }
+.gm-minimap { position: absolute; top: 10px; right: 10px; border-radius: 8px; border: 1px solid var(--border); pointer-events: none; z-index: 3; }
+
+/* ======================================================================
+   КОРЗИНА
+   ====================================================================== */
+.tr { height: 100%; display: flex; flex-direction: column; }
+.tr-bar { flex: none; display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-bottom: 1px solid var(--border); background: var(--bg-2); flex-wrap: wrap; }
+.tr-bar .grow b { font-size: 13.6px; }
+.tr-bar .grow span { display: block; font-size: 11.4px; color: var(--text-faint); }
+.tr-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.tr-item { display: flex; align-items: center; gap: 11px; padding: 9px 11px; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--border); }
+.tr-item .ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: #fff; flex: none; }
+.tr-item .tx { flex: 1; min-width: 0; }
+.tr-item .tx b { display: block; font-size: 12.8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr-item .tx span { display: block; font-size: 11px; color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr-empty { flex: 1; display: grid; place-items: center; text-align: center; color: var(--text-faint); padding: 30px; }
+.tr-empty svg { opacity: .3; margin-bottom: 10px; }
+
+/* ======================================================================
+   ЭТОТ КОМПЬЮТЕР
+   ====================================================================== */
+.pc { height: 100%; overflow-y: auto; padding: 18px 20px 30px; }
+.pc-hero { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: var(--r-lg); background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 24%, transparent), color-mix(in srgb, var(--accent-2) 12%, transparent)); border: 1px solid var(--border); }
+.pc-hero .ic { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); flex: none; box-shadow: 0 10px 26px rgba(0,0,0,.3); }
+.pc-hero b { font-size: 17px; display: block; }
+.pc-hero span { font-size: 12px; color: var(--text-dim); }
+.pc-h { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--text-faint); font-weight: 700; margin: 18px 0 9px; }
+.pc-drive { display: flex; align-items: center; gap: 13px; padding: 13px 15px; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--border); cursor: pointer; transition: .15s var(--ease); }
+.pc-drive:hover { border-color: var(--accent); transform: translateY(-1px); }
+.pc-drive .ic { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg,#64748b,#334155); flex: none; }
+.pc-drive .tx { flex: 1; min-width: 0; }
+.pc-drive .tx b { font-size: 13.2px; display: block; }
+.pc-drive .bar { height: 7px; border-radius: 99px; background: var(--border-strong); overflow: hidden; margin: 6px 0 4px; }
+.pc-drive .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.pc-drive .bar i.warn { background: linear-gradient(90deg,#f59e0b,#ef4444); }
+.pc-drive .tx span { font-size: 11px; color: var(--text-faint); }
+.pc-folders { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 9px; }
+.pc-f { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 13px 8px; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--border); transition: .15s var(--ease); }
+.pc-f:hover { transform: translateY(-2px); border-color: var(--accent); }
+.pc-f .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: #fff; }
+.pc-f b { font-size: 12px; font-weight: 500; }
+.pc-f span { font-size: 10.6px; color: var(--text-faint); }
+.pc-sys { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 9px; }
+.pc-sys > div { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 13px; font-size: 11.6px; color: var(--text-dim); }
+.pc-sys b { display: block; color: var(--text); font-size: 13px; margin-top: 3px; }
+
+/* ======================================================================
+   КВАРТИРА (после выключения)
+   ====================================================================== */
+.apt { position: fixed; inset: 0; z-index: 9600; background: #05070d; }
+.apt canvas { width: 100% !important; height: 100% !important; display: block; }
+.apt-hud { position: absolute; top: 14px; left: 14px; padding: 11px 14px; border-radius: var(--r-md); background: rgba(8,10,20,.62); backdrop-filter: blur(14px); border: 1px solid var(--border); color: #dfe6ff; font-size: 12px; line-height: 1.65; max-width: 280px; }
+.apt-hud b { color: #fff; }
+.apt-hud .k { display: inline-block; padding: 0 6px; border-radius: 5px; background: rgba(255,255,255,.14); font-family: var(--font-mono); font-size: 11px; }
+.apt-exit { position: absolute; top: 14px; right: 14px; }
+.apt-hint { position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); padding: 10px 18px; border-radius: 99px; background: rgba(8,10,20,.7); backdrop-filter: blur(14px); border: 1px solid var(--border); color: #fff; font-size: 13px; display: flex; gap: 9px; align-items: center; animation: fadeIn .3s both; }
+.apt-hint .k { padding: 2px 9px; border-radius: 6px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-ink); font-weight: 700; font-family: var(--font-mono); }
+.apt-cross { position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: rgba(255,255,255,.75); box-shadow: 0 0 8px rgba(255,255,255,.5); pointer-events: none; }

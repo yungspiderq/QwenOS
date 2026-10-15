@@ -115,41 +115,85 @@ async def main():
             (ok if disp.strip() == '56' else bad)(f'calculator 7×8= -> {disp}')
             await page.evaluate("QwenOS.wm.closeAll()")
 
-            # ---- 8. змейка: стрелки
+            # ---- 8. Змейка 3D: стрелки
             await page.evaluate("QwenOS.wm.open('snake')")
-            await page.wait_for_timeout(500)
-            await page.click('.win.focused canvas')
-            for _ in range(6):
+            await page.wait_for_timeout(800)
+            await page.click('.win.focused .gm-stage')
+            for _ in range(4):
                 await page.keyboard.press('ArrowDown')
-                await page.wait_for_timeout(120)
+                await page.wait_for_timeout(150)
                 await page.keyboard.press('ArrowLeft')
-                await page.wait_for_timeout(120)
-            await page.wait_for_timeout(400)
-            (ok)('snake: keyboard input without errors')
+                await page.wait_for_timeout(150)
+            st = await page.evaluate("(() => { const s = QwenOS.wm.byApp('snake')[0].data.state; return { len: s.len, alive: s.alive, gl: !!document.querySelector('.win.focused .gm-stage canvas') }; })()")
+            (ok if st['len'] >= 3 and st['gl'] else bad)(f'snake 3d: len={st["len"]} webgl={st["gl"]}')
             await page.evaluate("QwenOS.wm.closeAll()")
 
-            # ---- 9. сапёр: клики и флаг ПКМ
+            # ---- 9. Сапёр 3D: клик и флаг по канвасу
             await page.evaluate("QwenOS.wm.open('mines')")
-            await page.wait_for_timeout(400)
-            await page.click('.win.focused .ms-c:nth-child(40)')
-            await page.wait_for_timeout(200)
-            cell = page.locator('.win.focused .ms-c:not(.open)').first
-            cb = await cell.bounding_box()
-            await page.mouse.click(cb['x'] + 8, cb['y'] + 8, button='right')
-            await page.wait_for_timeout(200)
-            flags = await page.evaluate("document.querySelectorAll('.win.focused .ms-c.flag').length")
-            (ok if flags >= 1 else bad)(f'minesweeper flag set ({flags})')
+            await page.wait_for_timeout(800)
+            cvb = await page.locator('.win.focused .gm-stage canvas').bounding_box()
+            await page.mouse.click(cvb['x'] + cvb['width'] * .5, cvb['y'] + cvb['height'] * .62)
+            await page.wait_for_timeout(350)
+            opened = await page.evaluate("QwenOS.wm.byApp('mines')[0].data.state.opened")
+            (ok if opened >= 1 else bad)(f'mines 3d: open click ({opened})')
+            pt = await page.evaluate("""(() => {
+              const A = QwenOS.wm.byApp('mines')[0].data.api;
+              const i = A.G.cells.findIndex((c) => !c.open);
+              const m = A.meshes[i].position.clone(); m.y += .25; m.project(A.camera);
+              const r = A.renderer.domElement.getBoundingClientRect();
+              return [r.left + (m.x * .5 + .5) * r.width, r.top + (-m.y * .5 + .5) * r.height];
+            })()""")
+            await page.mouse.click(pt[0], pt[1], button='right')
+            await page.wait_for_timeout(350)
+            flags = await page.evaluate("QwenOS.wm.byApp('mines')[0].data.state.flags")
+            (ok if flags >= 1 else bad)(f'mines 3d: flag ({flags})')
             await page.evaluate("QwenOS.wm.closeAll()")
 
-            # ---- 10. 2048 стрелками
+            # ---- 10. 2048 3D: стрелки и плитки
             await page.evaluate("QwenOS.wm.open('game2048')")
-            await page.wait_for_timeout(400)
-            t0 = await page.evaluate("document.querySelectorAll('.win.focused .g2-t[class*=v]').length")
+            await page.wait_for_timeout(800)
+            t0 = await page.evaluate("QwenOS.wm.byApp('game2048')[0].data.state.tiles")
             for k in ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown']:
                 await page.keyboard.press(k)
-                await page.wait_for_timeout(120)
-            t1 = await page.evaluate("document.querySelectorAll('.win.focused .g2-t[class*=v]').length")
-            (ok if t1 >= t0 else bad)(f'2048 tiles {t0} -> {t1}')
+                await page.wait_for_timeout(260)
+            t1 = await page.evaluate("QwenOS.wm.byApp('game2048')[0].data.state.tiles")
+            (ok if t1 > t0 else bad)(f'2048 3d: tiles {t0} -> {t1}')
+            await page.evaluate("QwenOS.wm.closeAll()")
+
+            # ---- 10b. Арканоид 3D и Qwen3D
+            await page.evaluate("QwenOS.wm.open('breakout')")
+            await page.wait_for_timeout(800)
+            await page.click('.win.focused .gm-stage canvas')
+            await page.wait_for_timeout(600)
+            run = await page.evaluate("QwenOS.wm.byApp('breakout')[0].data.state.run")
+            (ok if run else bad)('breakout 3d: ball launched')
+            await page.evaluate("QwenOS.wm.closeAll()")
+            await page.evaluate("QwenOS.wm.open('qwen3d')")
+            await page.wait_for_timeout(800)
+            p0 = await page.evaluate("QwenOS.wm.byApp('qwen3d')[0].data.state.pos.slice()")
+            await page.keyboard.down('w'); await page.wait_for_timeout(600); await page.keyboard.up('w')
+            p1 = await page.evaluate("QwenOS.wm.byApp('qwen3d')[0].data.state.pos.slice()")
+            moved = abs(p0[0] - p1[0]) + abs(p0[1] - p1[1]) > .2
+            (ok if moved else bad)(f'qwen3d: movement {p0} -> {p1}')
+            await page.evaluate("QwenOS.wm.closeAll()")
+
+            # ---- 10c. Корзина: удалить и восстановить
+            await page.evaluate("QwenOS.fs.write(QwenOS.fs.home() + '/Documents/trashme.txt', 'bye'); QwenOS.fs.trash(QwenOS.fs.home() + '/Documents/trashme.txt')")
+            await page.evaluate("QwenOS.wm.open('trash')")
+            await page.wait_for_timeout(600)
+            rows = await page.evaluate("document.querySelectorAll('.win.focused .tr-item').length")
+            (ok if rows >= 1 else bad)(f'trash: lists items ({rows})')
+            await page.click('.win.focused .tr-item [data-a="restore"]')
+            await page.wait_for_timeout(500)
+            back = await page.evaluate("QwenOS.fs.exists(QwenOS.fs.home() + '/Documents/trashme.txt')")
+            (ok if back else bad)('trash: restore works')
+            await page.evaluate("QwenOS.wm.closeAll()")
+
+            # ---- 10d. Этот компьютер
+            await page.evaluate("QwenOS.wm.open('mypc')")
+            await page.wait_for_timeout(600)
+            drv = await page.evaluate("!!document.querySelector('.win.focused .pc-drive .bar i')")
+            (ok if drv else bad)('mypc: drive bar rendered')
             await page.evaluate("QwenOS.wm.closeAll()")
 
             # ---- 11. магазин: установка
@@ -180,8 +224,11 @@ async def main():
             await page.click('#tray-vol')
             await page.wait_for_timeout(400)
             await page.evaluate("(() => { const r = document.querySelector('#quick-panel [data-s=bright]'); r.value = 55; r.dispatchEvent(new Event('input', {bubbles:true})); })()")
-            await page.wait_for_timeout(300)
-            op = await page.evaluate("getComputedStyle(document.getElementById('brightness-overlay')).opacity")
+            op = '0'
+            for _ in range(14):
+                await page.wait_for_timeout(150)
+                op = await page.evaluate("getComputedStyle(document.getElementById('brightness-overlay')).opacity")
+                if float(op) > 0.2: break
             (ok if float(op) > 0.2 else bad)(f'brightness overlay opacity {op}')
             await page.keyboard.press('Escape')
 
@@ -253,6 +300,17 @@ async def main():
             except Exception:
                 done = False
             (ok if done else bad)('updater: demo finishes without reload')
+
+            # ---- 17b. квартира после выключения
+            await page.evaluate("window.__aptLeft = false; QwenOS.apartment.enter(() => { window.__aptLeft = true; })")
+            await page.wait_for_timeout(1000)
+            apt = await page.evaluate("!!document.querySelector('.apt canvas')")
+            (ok if apt else bad)('apartment: scene mounted')
+            await page.keyboard.down('w'); await page.wait_for_timeout(500); await page.keyboard.up('w')
+            await page.keyboard.press('Escape')
+            await page.wait_for_timeout(600)
+            left = await page.evaluate("window.__aptLeft && !document.querySelector('.apt')")
+            (ok if left else bad)('apartment: exits by Esc')
 
             # ---- 18. блокировка и разблокировка
             await page.keyboard.press('Control+Alt+KeyL')

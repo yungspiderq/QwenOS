@@ -137,7 +137,7 @@
               { label: 'Показать в «Файлах»', icon: 'folder', onClick: () => api.open('files', { path: fs.dirname(f.path) }) },
               { label: 'Скопировать путь', icon: 'copy', onClick: () => OS.copyText(f.path) },
               { sep: true },
-              { label: 'Удалить', icon: 'trash', danger: true, onClick: () => { if (confirm('Удалить «' + f.name + '»?')) { fs.rm(f.path); OS.bus.emit('fs:changed'); if (st.path === f.path) { st.path = null; ta.value = ''; syncName(); } renderList(); } } }
+              { label: 'Удалить (в Корзину)', icon: 'trash', danger: true, onClick: () => { if (confirm('Переместить «' + f.name + '» в Корзину?')) { fs.trash(f.path); OS.bus.emit('fs:changed'); if (st.path === f.path) { st.path = null; ta.value = ''; syncName(); } renderList(); } } }
             ]);
           };
           listEl.append(b);
@@ -218,8 +218,8 @@
         } else if (a === 'dl') OS.download(st.path ? fs.basename(st.path) : 'note.txt', ta.value);
         else if (a === 'del') {
           if (!st.path) return OS.toast('Нечего удалять', 'Файл ещё не сохранён', { icon: 'info' });
-          if (!confirm('Удалить «' + fs.basename(st.path) + '»?')) return;
-          fs.rm(st.path); OS.bus.emit('fs:changed');
+          if (!confirm('Переместить «' + fs.basename(st.path) + '» в Корзину?')) return;
+          fs.trash(st.path); OS.bus.emit('fs:changed');
           st.path = null; ta.value = ''; st.dirty = false; syncName(); renderList(); updateStatus();
         } else if (a === 'fs+') { st.fontSize = Math.min(26, st.fontSize + 1); ta.style.fontSize = st.fontSize + 'px'; OS.store.set('notes.fs', st.fontSize); }
         else if (a === 'fs-') { st.fontSize = Math.max(10, st.fontSize - 1); ta.style.fontSize = st.fontSize + 'px'; OS.store.set('notes.fs', st.fontSize); }

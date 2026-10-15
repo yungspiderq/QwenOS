@@ -61,18 +61,20 @@
 
     byteLen(s) { try { return new Blob([s]).size; } catch (e) { return String(s).length; } },
 
-    list(path) {
+    list(path, showHidden) {
       const n = this.node(path);
       if (!n || n.t !== 'd') return [];
       const base = this.normalize(path);
-      return Object.values(n.c).map((c) => ({
+      let items = Object.values(n.c).map((c) => ({
         name: c.n,
         path: (base === '/' ? '' : base) + '/' + c.n,
         type: c.t === 'd' ? 'dir' : 'file',
         modified: c.m,
         ext: c.t === 'f' ? FS.ext(c.n) : '',
         size: c.t === 'f' ? FS.byteLen(c.v) : 0
-      })).sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name, 'ru') : a.type === 'dir' ? -1 : 1));
+      }));
+      if (!showHidden) items = items.filter((it) => it.name[0] !== '.');
+      return items.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name, 'ru') : a.type === 'dir' ? -1 : 1));
     },
 
     read(path) { const n = this.node(path); return n && n.t === 'f' ? n.v : null; },
@@ -164,6 +166,74 @@
       return { ok: true, path: this.join(dstDir, name) };
     },
 
+    /* ---------- корзина ---------- */
+    trashDir() { return '/.trash'; },
+    _trashMeta() {
+      try { return JSON.parse(this.read(this.trashDir() + '/.index.json') || '[]'); } catch (e) { return []; }
+    },
+    _saveTrashMeta(list) { this.write(this.trashDir() + '/.index.json', JSON.stringify(list)); },
+    trash(path) {
+      path = this.normalize(path);
+      if (path === '/' || path === this.home() || path.startsWith('/.trash')) return { ok: false, error: 'Нельзя удалить в корзину' };
+      const n = this.node(path);
+      if (!n) return { ok: false, error: 'Не найдено' };
+      const td = this._mkdirs(this.trashDir());
+      let name = this.basename(path), i = 1;
+      const dot = name.lastIndexOf('.');
+      const stem = dot > 0 ? name.slice(0, dot) : name, ext = dot > 0 ? name.slice(dot) : '';
+      while (td.c[name]) { name = stem + ' (' + (i++) + ')' + ext; }
+      const sp = this.node(this.dirname(path));
+      delete sp.c[n.n];
+      n.n = name; n.m = now();
+      td.c[name] = n;
+      const meta = this._trashMeta();
+      meta.unshift({ name: name, orig: this.dirname(path), at: now() });
+      this._saveTrashMeta(meta);
+      this.touch();
+      return { ok: true, name: name };
+    },
+    trashList() {
+      const td = this.node(this.trashDir());
+      if (!td) return [];
+      return this._trashMeta().filter((m) => td.c[m.name]).map((m) => {
+        const node = td.c[m.name];
+        return {
+          name: m.name, orig: m.orig, at: m.at,
+          type: node.t === 'd' ? 'dir' : 'file',
+          ext: this.ext(m.name),
+          size: this.du(this.join(this.trashDir(), m.name))
+        };
+      });
+    },
+    untrash(name) {
+      const meta = this._trashMeta();
+      const rec = meta.find((m) => m.name === name);
+      if (!rec) return { ok: false, error: 'Запись не найдена' };
+      const td = this.node(this.trashDir());
+      const n = td && td.c[name];
+      if (!n) return { ok: false, error: 'Объект не найден' };
+      let dir = rec.orig;
+      if (!this.isDir(dir)) dir = this.home();
+      const dst = this.node(dir);
+      let base = name.replace(/\s\((\d+)\)(?=(\.[^.]+)?$)/, '');
+      let target = base, i = 1;
+      const dot = base.lastIndexOf('.');
+      const stem = dot > 0 ? base.slice(0, dot) : base, ext = dot > 0 ? base.slice(dot) : '';
+      while (dst.c[target]) { target = stem + ' (' + (i++) + ')' + ext; }
+      delete td.c[name];
+      n.n = target; n.m = now();
+      dst.c[target] = n;
+      this._saveTrashMeta(meta.filter((m) => m.name !== name));
+      this.touch();
+      return { ok: true, path: this.join(dir, target) };
+    },
+    emptyTrash() {
+      const r = this.rm(this.trashDir(), true);
+      if (r.ok) this._mkdirs(this.trashDir());
+      this.touch();
+      return r;
+    },
+
     /* ---------- сводки ---------- */
     du(path) {
       const n = this.node(path || '/');
@@ -197,7 +267,7 @@
       root = this.normalize(root || '/');
       const out = [];
       const walk = (p) => {
-        this.list(p).forEach((it) => {
+        this.list(p, true).forEach((it) => {
           if (it.name.toLowerCase().includes(query)) out.push(it);
           if (it.type === 'dir') walk(it.path);
         });
@@ -210,7 +280,7 @@
       root = this.normalize(root || '/');
       const out = [];
       const walk = (p) => {
-        this.list(p).forEach((it) => {
+        this.list(p, true).forEach((it) => {
           if (it.type === 'dir') walk(it.path);
           else {
             const v = this.read(it.path) || '';
@@ -246,6 +316,7 @@
         if (!this.exists(p)) this._mkdirs(p);
       });
       ['etc', 'var/log', 'tmp', 'bin', 'usr/share'].forEach((d) => { if (!this.exists('/' + d)) this._mkdirs('/' + d); });
+      if (!this.exists('/.trash')) this._mkdirs('/.trash');
     },
 
     /* ---------- начальное наполнение ---------- */
@@ -255,6 +326,7 @@
       const home = '/home/' + u;
       ['Desktop', 'Documents', 'Pictures', 'Music', 'Downloads', 'Projects/qwen-site'].forEach((d) => this._mkdirs(home + '/' + d));
       ['etc', 'var/log', 'tmp', 'bin', 'usr/share', 'proc'].forEach((d) => this._mkdirs('/' + d));
+      this._mkdirs('/.trash');
 
       this.write(home + '/Documents/README.md', [
         '# Добро пожаловать в QwenOS ' + OS.version + ' «' + OS.codename + '»',

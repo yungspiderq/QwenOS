@@ -87,11 +87,20 @@
       OS.wm.closeAll();
       const ps = this.screen('Завершение работы…', 'Все данные сохранены');
       setTimeout(() => {
-        ps.innerHTML = '<div class="ps-in" style="cursor:pointer">' +
+        ps.innerHTML = '<div class="ps-in">' +
           '<div style="font-size:44px;opacity:.85;margin-bottom:14px">⏻</div>' +
           '<div style="font-size:15px">Питание отключено</div>' +
-          '<div style="font-size:12px;opacity:.55;margin-top:10px">Нажмите в любом месте, чтобы включить QwenOS</div></div>';
-        ps.onclick = () => location.reload();
+          '<div style="font-size:12px;opacity:.55;margin:10px auto 22px;max-width:340px;line-height:1.6">За окном темнеет. Вы остаётесь в квартире — ' +
+          'можно пройтись по комнате и посмотреть на погасший монитор со стороны.</div>' +
+          '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
+          '<button class="btn btn-accent" id="ps-on">Включить компьютер</button>' +
+          '<button class="btn" id="ps-walk">Осмотреть квартиру</button></div></div>';
+        ps.onclick = null;
+        ps.querySelector('#ps-on').onclick = () => location.reload();
+        ps.querySelector('#ps-walk').onclick = () => {
+          ps.classList.add('hidden');
+          OS.apartment.enter(() => { ps.classList.remove('hidden'); });
+        };
       }, 1400);
     }
   };

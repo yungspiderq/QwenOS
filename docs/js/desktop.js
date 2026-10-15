@@ -131,6 +131,8 @@
       if (!S.get('desktopIcons')) return;
 
       const apps = OS.Apps.list().filter((a) => a.desktop !== false && OS.Apps.installed(a.id));
+      const prio = { trash: 0, mypc: 1 };
+      apps.sort((a, b) => (prio[a.id] == null ? 9 : prio[a.id]) - (prio[b.id] == null ? 9 : prio[b.id]));
       apps.forEach((a) => {
         const d = OS.el('div', { class: 'dicon', tabindex: '0', 'data-app': a.id, title: a.name });
         d.innerHTML = '<div class="dicon-ico" style="' + OS.Apps.tileStyle(a) + '">' + OS.svg(a.icon, 25) + '</div><div class="dicon-label">' + OS.esc(a.name) + '</div>';
@@ -204,9 +206,10 @@
           { label: 'Переименовать', icon: 'pencil', key: 'F2', onClick: () => this.renameFile(target.path, node) },
           { label: 'Показать в «Файлах»', icon: 'folder', onClick: () => OS.wm.open('files', { path: fs.dirname(target.path) }) },
           { sep: true },
-          { label: 'Удалить', icon: 'trash', danger: true, key: 'Del', onClick: () => {
-            if (!confirm('Удалить «' + target.name + '»?')) return;
-            fs.rm(target.path, true); OS.bus.emit('fs:changed'); this.renderIcons();
+          { label: 'Удалить (в Корзину)', icon: 'trash', danger: true, key: 'Del', onClick: () => {
+            if (!confirm('Переместить «' + target.name + '» в Корзину?')) return;
+            fs.trash(target.path); OS.bus.emit('fs:changed'); this.renderIcons();
+            OS.toast('Перемещено в Корзину', target.name, { icon: 'trash', timeout: 2400 });
           } }
         );
       }
