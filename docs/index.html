@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="aurora">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>QwenOS 3.0 — операционная система в браузере</title>
+<meta name="description" content="QwenOS — виртуальная операционная система, работающая прямо во вкладке браузера: окна, терминал, файловая система, игры и синтезатор музыки.">
+<meta name="theme-color" content="#0b0e1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/desktop.css">
+<link rel="stylesheet" href="css/windows.css">
+<link rel="stylesheet" href="css/apps.css">
+</head>
+<body>
+
+<!-- ============ ЭКРАН ЗАГРУЗКИ (BIOS/BOOT) ============ -->
+<div id="boot" class="boot">
+  <div class="boot-inner">
+    <div class="boot-logo" aria-hidden="true">
+      <svg viewBox="0 0 64 64" width="72" height="72">
+        <defs>
+          <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/>
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="52" height="52" rx="14" fill="none" stroke="url(#bg1)" stroke-width="3"/>
+        <circle cx="32" cy="32" r="8" fill="url(#bg1)"/>
+        <path d="M32 12v8M32 44v8M12 32h8M44 32h8" stroke="url(#bg1)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="boot-name">QwenOS<span>3.0</span></div>
+    <div class="boot-bar"><i id="boot-fill"></i></div>
+    <pre id="boot-log" class="boot-log"></pre>
+  </div>
+</div>
+
+<!-- ============ ЭКРАН БЛОКИРОВКИ / ВХОД ============ -->
+<div id="lock" class="lock hidden">
+  <div class="lock-bg"></div>
+  <div class="lock-card">
+    <div class="lock-avatar" id="lock-avatar"></div>
+    <div class="lock-user" id="lock-user">user</div>
+    <div class="lock-hint" id="lock-hint">Нажмите «Войти» или Enter</div>
+    <div class="lock-row">
+      <input type="password" id="lock-pass" placeholder="Пароль (по умолчанию пустой)" autocomplete="off" spellcheck="false">
+      <button id="lock-btn" class="btn btn-accent">Войти</button>
+    </div>
+    <div class="lock-clock"><span id="lock-time">--:--</span><span id="lock-date"></span></div>
+  </div>
+</div>
+
+<!-- ============ РАБОЧИЙ СТОЛ ============ -->
+<div id="os" class="os hidden">
+  <div id="wallpaper" class="wallpaper"></div>
+  <div id="wallpaper-fx" class="wallpaper-fx"></div>
+
+  <div id="desktop" class="desktop" tabindex="-1">
+    <div id="desktop-icons" class="desktop-icons"></div>
+    <div id="widgets" class="widgets"></div>
+  </div>
+
+  <div id="windows" class="windows"></div>
+
+  <!-- панель задач -->
+  <div id="taskbar" class="taskbar">
+    <button id="start-btn" class="tb-start" title="Меню «Пуск»">
+      <svg viewBox="0 0 24 24" width="20" height="20"><rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" opacity=".7"/><rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" opacity=".7"/><rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor"/></svg>
+    </button>
+    <div id="tb-search" class="tb-search" title="Поиск приложений">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+      <span>Поиск</span>
+    </div>
+    <div id="tb-apps" class="tb-apps"></div>
+    <div id="tb-tray" class="tb-tray">
+      <button class="tb-tray-btn" id="tray-net" title="Сеть"></button>
+      <button class="tb-tray-btn" id="tray-vol" title="Звук"></button>
+      <button class="tb-tray-btn" id="tray-bat" title="Питание"></button>
+      <button class="tb-tray-btn" id="tray-theme" title="Сменить тему"></button>
+      <div class="tb-clock" id="tb-clock"><b>--:--</b><span></span></div>
+    </div>
+  </div>
+
+  <!-- меню Пуск -->
+  <div id="start-menu" class="start-menu hidden"></div>
+  <!-- быстрые настройки -->
+  <div id="quick-panel" class="quick-panel hidden"></div>
+  <!-- контекстное меню -->
+  <div id="ctx-menu" class="ctx-menu hidden"></div>
+  <!-- уведомления -->
+  <div id="toasts" class="toasts"></div>
+  <!-- превью окон (Win+Tab) -->
+  <div id="overview" class="overview hidden"></div>
+  <!-- выделение рамкой на рабочем столе -->
+  <div id="marquee" class="marquee hidden"></div>
+  <!-- меню выключения -->
+  <div id="power-screen" class="power-screen hidden"></div>
+</div>
+
+<noscript><div style="padding:40px;font:16px system-ui;color:#fff;background:#111;min-height:100vh">Для работы QwenOS необходим JavaScript.</div></noscript>
+
+<script src="js/core.js"></script>
+<script src="js/fs.js"></script>
+<script src="js/wm.js"></script>
+<script src="js/apps/system.js"></script>
+<script src="js/apps/system-ui.js"></script>
+<script src="js/apps/productivity.js"></script>
+<script src="js/apps/media.js"></script>
+<script src="js/apps/games.js"></script>
+<script src="js/desktop.js"></script>
+<script src="js/taskbar.js"></script>
+<script src="js/boot.js"></script>
+</body>
+</html>

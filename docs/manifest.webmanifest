@@ -1,0 +1,26 @@
+{
+  "name": "QwenOS 3.0 Aurora",
+  "short_name": "QwenOS",
+  "description": "Виртуальная операционная система в браузере: окна, терминал, файловая система, игры и синтезатор музыки.",
+  "id": "qwenos-3",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "any",
+  "background_color": "#05060d",
+  "theme_color": "#0b0e1a",
+  "lang": "ru",
+  "categories": ["productivity", "games", "utilities"],
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Терминал", "short_name": "Терминал", "url": "./?app=terminal", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Файлы", "short_name": "Файлы", "url": "./?app=files", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Игры", "short_name": "Игры", "url": "./?app=qwen3d", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

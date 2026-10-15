@@ -1,0 +1,91 @@
+/* ==========================================================================
+   QwenOS 3.0 — windows.css
+   Оконный менеджер: рамка, заголовок, кнопки, ресайз, снаппинг, анимации
+   ========================================================================== */
+
+.windows { position: absolute; inset: 0 0 var(--taskbar-h) 0; z-index: 100; pointer-events: none; }
+
+.win {
+  position: absolute; pointer-events: auto; display: flex; flex-direction: column; overflow: hidden;
+  min-width: 260px; min-height: 160px;
+  background: var(--panel-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  box-shadow: 0 18px 44px rgba(0,0,0,.42), 0 2px 8px rgba(0,0,0,.3);
+  transition: box-shadow .2s var(--ease), border-color .2s var(--ease), opacity .2s;
+  animation: winOpen .26s var(--ease) both;
+  contain: layout paint;
+}
+@keyframes winOpen { from { opacity: 0; transform: scale(.94) translateY(14px); } }
+.win.closing { animation: winClose .17s var(--ease) forwards; pointer-events: none; }
+@keyframes winClose { to { opacity: 0; transform: scale(.94) translateY(10px); } }
+.win.focused {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border-strong));
+  box-shadow: 0 28px 70px rgba(0,0,0,.55), 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent), 0 0 44px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.win.blurred { opacity: .965; }
+.win.blurred .win-tb { filter: saturate(.6); }
+.win.minimizing { animation: winMin .22s var(--ease) forwards; }
+@keyframes winMin { to { opacity: 0; transform: scale(.6) translateY(120px); } }
+.win.restoring { animation: winOpen .2s var(--ease) both; }
+.win.dragging { transition: none !important; cursor: grabbing; }
+.win.dragging * { cursor: grabbing !important; user-select: none !important; }
+.win.resizing { transition: none !important; }
+.win.max { border-radius: 0; border-color: transparent; inset: 0 !important; width: auto !important; height: auto !important; }
+.win.no-anim { animation: none !important; }
+
+/* ---------- Заголовок ---------- */
+.win-tb {
+  height: 38px; flex: none; display: flex; align-items: center; gap: 9px; padding: 0 6px 0 11px;
+  background: var(--titlebar); border-bottom: 1px solid var(--border);
+  cursor: grab; user-select: none; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.win-tb:active { cursor: grabbing; }
+.win-ico { width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; color: #fff; flex: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
+.win-ico svg { width: 12px; height: 12px; }
+.win-title { flex: 1; min-width: 0; font-size: 12.8px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); letter-spacing: .01em; }
+.win.blurred .win-title { color: var(--text-dim); }
+.win-btns { display: flex; gap: 3px; flex: none; }
+.win-btns button {
+  width: 30px; height: 27px; border-radius: 8px; display: grid; place-items: center;
+  color: var(--text-dim); transition: .13s;
+}
+.win-btns button:hover { background: var(--hover); color: var(--text); }
+.win-btns button svg { width: 12px; height: 12px; }
+.win-btns .close:hover { background: #e0443e; color: #fff; }
+.win-btns button:disabled { opacity: .3; cursor: default; }
+.win-btns button:disabled:hover { background: none; color: var(--text-dim); }
+
+/* ---------- Тело окна ---------- */
+.win-body { flex: 1; min-height: 0; overflow: auto; position: relative; background: var(--bg); color: var(--text); }
+.win-body.nopad { padding: 0; }
+.win-body.flat { overflow: hidden; }
+.win.max .win-body { border-radius: 0; }
+
+/* ---------- Ручки ресайза (внутри окна, чтобы не резались overflow:hidden) ---------- */
+.rz { position: absolute; z-index: 5; }
+.rz[data-d="n"]  { top: 0; left: 12px; right: 12px; height: 6px; cursor: ns-resize; }
+.rz[data-d="s"]  { bottom: 0; left: 12px; right: 12px; height: 6px; cursor: ns-resize; }
+.rz[data-d="e"]  { right: 0; top: 12px; bottom: 12px; width: 6px; cursor: ew-resize; }
+.rz[data-d="w"]  { left: 0; top: 12px; bottom: 12px; width: 6px; cursor: ew-resize; }
+.rz[data-d="ne"] { top: 0; right: 0; width: 14px; height: 14px; cursor: nesw-resize; }
+.rz[data-d="nw"] { top: 0; left: 0; width: 14px; height: 14px; cursor: nwse-resize; }
+.rz[data-d="se"] { bottom: 0; right: 0; width: 14px; height: 14px; cursor: nwse-resize; }
+.rz[data-d="sw"] { bottom: 0; left: 0; width: 14px; height: 14px; cursor: nesw-resize; }
+.win.max .rz { display: none; }
+
+/* ---------- Подсказка снаппинга ---------- */
+.snap-hint {
+  position: absolute; z-index: 90; pointer-events: none; border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+  border: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  animation: fadeIn .15s both; transition: all .13s var(--ease);
+}
+
+/* ---------- Мобильные: окна на весь экран ---------- */
+@media (max-width: 720px) {
+  .win { border-radius: var(--r-md); }
+  .win-tb { height: 42px; }
+  .win-btns button { width: 34px; height: 30px; }
+}
