@@ -8,3 +8,5 @@
   в терминале, сохранение из блокнота, клики калькулятора, игры, установка из магазина,
   яркость, обзор окон, рисование в Paint, навигация QwenNet, блокировка экрана.
   Запуск: `pip install playwright && playwright install chromium && python3 tests/inter.py`
+- `live.py` — проверка боевого деплоя на GitHub Pages (загрузка, вход, окна, service worker).
+  Запуск: `pip install playwright && playwright install chromium && python3 tests/live.py`
