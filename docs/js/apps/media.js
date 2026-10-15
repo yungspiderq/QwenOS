@@ -16,7 +16,9 @@
     color: '#ec4899', color2: '#7c3aed',
     category: 'Мультимедиа',
     keywords: 'рисование графика paint canvas кисть drawing',
-    width: 900, height: 620, minWidth: 420, minHeight: 360,
+        storeOnly: true,
+    desktop: false,
+width: 900, height: 620, minWidth: 420, minHeight: 360,
     mount(win, api) {
       const st = {
         tool: OS.store.get('paint.tool', 'brush'), color: OS.store.get('paint.color', '#8b5cf6'),
@@ -248,7 +250,9 @@
     color: '#a855f7', color2: '#4f46e5',
     category: 'Мультимедиа',
     keywords: 'музыка плеер аудио chiptune synth player visualizer',
-    width: 620, height: 560, minWidth: 380, minHeight: 420,
+        storeOnly: true,
+    desktop: false,
+width: 620, height: 560, minWidth: 380, minHeight: 420,
     mount(win) {
       const N = { C: 0, 'C#': 1, D: 2, 'D#': 3, E: 4, F: 5, 'F#': 6, G: 7, 'G#': 8, A: 9, 'A#': 10, B: 11 };
       const freq = (name) => {
@@ -415,7 +419,9 @@
     color: '#22c55e', color2: '#0f766e',
     category: 'Мультимедиа',
     keywords: 'изображения картинки галерея обои photos gallery images',
-    width: 860, height: 580, minWidth: 400, minHeight: 320,
+        storeOnly: true,
+    desktop: false,
+width: 860, height: 580, minWidth: 400, minHeight: 320,
     mount(win, api) {
       const st = { tab: 'all', items: [], cur: -1, gen: null };
       win.body.innerHTML =
@@ -853,7 +859,8 @@
     color: '#16a34a', color2: '#052e16',
     category: 'Развлечения',
     keywords: 'заставка screensaver matrix дождь код',
-    width: 700, height: 460, minWidth: 320, minHeight: 240,
+        premium: 100,
+width: 700, height: 460, minWidth: 320, minHeight: 240,
     storeOnly: true,
     mount(win) {
       win.body.innerHTML = '<div class="mx"><canvas></canvas><div class="mx-hint">Нажмите Esc или закройте окно, чтобы выйти</div></div>';

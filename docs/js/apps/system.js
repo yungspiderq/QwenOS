@@ -16,7 +16,8 @@
     color: '#15803d', color2: '#052e16',
     category: 'Система',
     keywords: 'shell консоль qsh команда cmd bash',
-    width: 780, height: 460, minWidth: 380, minHeight: 220,
+        storeOnly: true,
+width: 780, height: 460, minWidth: 380, minHeight: 220,
     mount(win, api) {
       const user = OS.settings.get('user');
       const S = {
@@ -605,7 +606,9 @@
     color: '#f59e0b', color2: '#b45309',
     category: 'Система',
     keywords: 'проводник файлы папки explorer manager vfs',
-    width: 860, height: 540, minWidth: 420, minHeight: 280,
+        storeOnly: true,
+    desktop: false,
+width: 860, height: 540, minWidth: 420, minHeight: 280,
     mount(win, api) {
       const S = {
         path: win.params.path || fs.home(),

@@ -68,7 +68,9 @@
     color: '#eab308', color2: '#a16207',
     category: 'Продуктивность',
     keywords: 'текст редактор заметки markdown notes editor write',
-    width: 900, height: 580, minWidth: 420, minHeight: 300,
+        storeOnly: true,
+    desktop: false,
+width: 900, height: 580, minWidth: 420, minHeight: 300,
     mount(win, api) {
       const st = { path: win.params.path || null, dirty: false, mode: 'edit', fontSize: OS.store.get('notes.fs', 14), list: [], q: '' };
       if (st.path && !fs.isFile(st.path)) st.path = null;
@@ -306,7 +308,9 @@
     color: '#f97316', color2: '#7c2d12',
     category: 'Продуктивность',
     keywords: 'calc математика счёт вычисления math',
-    width: 400, height: 560, minWidth: 320, minHeight: 420,
+        storeOnly: true,
+    desktop: false,
+width: 400, height: 560, minWidth: 320, minHeight: 420,
     mount(win) {
       let expr = '', last = '', mem = 0;
       const hist = OS.store.get('calc.hist', []) || [];
@@ -401,6 +405,7 @@
   OS.Apps.register({
     id: 'timer',
     name: 'Таймер',
+    premium: 50,
     icon: 'clock',
     color: '#06b6d4', color2: '#0e7490',
     category: 'Продуктивность',
@@ -497,6 +502,7 @@
   OS.Apps.register({
     id: 'weather',
     name: 'Погода',
+    premium: 50,
     icon: 'cloud',
     color: '#38bdf8', color2: '#1d4ed8',
     category: 'Сеть',

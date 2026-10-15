@@ -16,7 +16,8 @@
     color: '#64748b', color2: '#334155',
     category: 'Система',
     keywords: 'параметры конфигурация тема обои оформление settings preferences',
-    width: 880, height: 580, minWidth: 460, minHeight: 340,
+        desktop: false,
+width: 880, height: 580, minWidth: 460, minHeight: 340,
     mount(win, api) {
       const SECTIONS = [
         { id: 'look', name: 'Оформление', icon: 'palette' },
@@ -331,7 +332,8 @@
     color: '#0ea5e9', color2: '#1e40af',
     category: 'Система',
     keywords: 'процессы задачи память cpu fps task manager performance',
-    width: 780, height: 540, minWidth: 420, minHeight: 320,
+        desktop: false,
+width: 780, height: 540, minWidth: 420, minHeight: 320,
     mount(win) {
       win.body.innerHTML =
         '<div class="mon">' +
@@ -437,7 +439,8 @@
     color: '#8b5cf6', color2: '#ec4899',
     category: 'Система',
     keywords: 'магазин приложения install store market',
-    width: 900, height: 600, minWidth: 420, minHeight: 340,
+        desktop: false,
+width: 900, height: 600, minWidth: 420, minHeight: 340,
     mount(win, api) {
       const cats = ['Все', 'Игры', 'Мультимедиа', 'Продуктивность', 'Система', 'Сеть'];
       let cat = 'Все', q = '';
@@ -480,7 +483,7 @@
       };
 
       function render() {
-        const apps = OS.Apps.list().filter((a) => (cat === 'Все' || a.category === cat) && (!q || (a.name + a.id + (a.keywords || '')).toLowerCase().includes(q)));
+        const apps = OS.Apps.list().filter((a) => !a.premium && (cat === 'Все' || a.category === cat) && (!q || (a.name + a.id + (a.keywords || '')).toLowerCase().includes(q)));
         grid.innerHTML = '';
         if (!apps.length) { grid.innerHTML = '<div class="st-empty">Ничего не найдено</div>'; return; }
         apps.forEach((a) => {
@@ -540,7 +543,10 @@
     color: '#f97316', color2: '#db2777',
     category: 'Система',
     keywords: 'тур помощь старт welcome help guide',
-    width: 760, height: 520, minWidth: 380, minHeight: 320,
+        storeOnly: true,
+    desktop: false,
+    noStart: true,
+width: 760, height: 520, minWidth: 380, minHeight: 320,
     mount(win, api) {
       const slides = [
         { icon: 'monitor', title: 'Это настоящая ОС… почти', text: 'Оконный менеджер с перетаскиванием, ресайзом, снаппингом к краям, сворачиванием и Alt+Tab. Всё на чистом DOM — без единой библиотеки.' },

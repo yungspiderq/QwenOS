@@ -10,7 +10,7 @@
     codename: 'Aurora',
     kernel: 'qwen-kernel 6.1.0-web',
     build: new Date().toISOString().slice(0, 10),
-    buildNumber: 3021,
+    buildNumber: 3022,
     startedAt: Date.now()
   };
   global.OS = OS;
@@ -167,7 +167,7 @@
     theme: 'aurora', accent: 'violet', wallpaper: 'aurora', wallpaperFx: true,
     uiScale: 1, motion: true, sound: true, volume: 0.5, muted: false,
     user: 'user', avatarText: 'Q', clock24: true, widgets: ['clock', 'weather'],
-    installed: [], pinned: ['files', 'terminal', 'browser', 'notes', 'music'],
+    installed: [], pinned: ['browser', 'steam'],
     desktopIcons: true, tips: true, bootFast: false
   };
 
@@ -288,6 +288,7 @@
     wave: '<path d="M2.6 12c1.6-4 3.2-4 4.8 0s3.2 4 4.8 0 3.2-4 4.8 0 2.4 3 2.4 3"/>',
     compass: '<circle cx="12" cy="12" r="9"/><path d="M15.4 8.6l-2 4.8-4.8 2 2-4.8z"/>',
     puzzle: '<path d="M10 3.4h4v2.2a2 2 0 1 0 4 0V3.4h2.6v4.2h-2.2a2 2 0 1 0 0 4h2.2v9.2H3.4v-4.2a2 2 0 1 1 0-4V3.4H10z"/>',
+    steam: '<circle cx="12" cy="12" r="8.8"/><circle cx="9.6" cy="9.8" r="2.9"/><circle cx="15.4" cy="14.6" r="1.9"/><path d="M12.2 11.9l-1.5 1.6M3.4 14.2l3.6 1.4M14.2 3.6l1.5 3.5"/>',
     qr: '<rect x="3.4" y="3.4" width="6.6" height="6.6" rx="1.4"/><rect x="14" y="3.4" width="6.6" height="6.6" rx="1.4"/><rect x="3.4" y="14" width="6.6" height="6.6" rx="1.4"/><path d="M14 14h2.6v2.6H14zM18 18h2.6v2.6H18zM14 20.6h1.4M20.6 14v1.4"/>',
     scan: '<path d="M4 8.4V5.6A1.6 1.6 0 0 1 5.6 4h2.8M15.6 4h2.8A1.6 1.6 0 0 1 20 5.6v2.8M20 15.6v2.8a1.6 1.6 0 0 1-1.6 1.6h-2.8M8.4 20H5.6A1.6 1.6 0 0 1 4 18.4v-2.8"/><path d="M4 12h16"/>',
     archive: '<rect x="3" y="4" width="18" height="4.6" rx="1.6"/><path d="M4.8 8.6v10a1.6 1.6 0 0 0 1.6 1.6h11.2a1.6 1.6 0 0 0 1.6-1.6v-10"/><path d="M10 12.4h4"/>',
@@ -362,6 +363,29 @@
   };
   OS.sfx = Sfx;
 
+  /* ---------------------------------------------------------------- монеты */
+  const Coins = {
+    get() { return Store.get('coins', 0) || 0; },
+    earned() { return Store.get('coinsEarned', 0) || 0; },
+    add(n) {
+      n = Math.floor(n || 0);
+      if (!n) return this.get();
+      const v = Math.max(0, this.get() + n);
+      Store.set('coins', v);
+      if (n > 0) Store.set('coinsEarned', this.earned() + n);
+      Bus.emit('coins', v);
+      return v;
+    },
+    spend(n) {
+      if (this.get() < n) return false;
+      Store.set('coins', this.get() - n);
+      Bus.emit('coins', this.get());
+      return true;
+    },
+    level() { return 1 + Math.floor(Math.sqrt(this.earned() / 60)); }
+  };
+  OS.coins = Coins;
+
   /* ------------------------------------------------------------ app registry */
   const Apps = {
     _list: new Map(),
@@ -371,7 +395,8 @@
       this._list.set(def.id, Object.assign({
         name: def.id, icon: 'box', color: '#7c5cff', color2: '#22d3ee',
         width: 760, height: 480, minWidth: 320, minHeight: 200,
-        desktop: true, category: 'Прочее', singleton: false, resizable: true, keywords: ''
+        desktop: true, category: 'Прочее', singleton: false, resizable: true, keywords: '',
+        storeOnly: false, premium: 0, noStart: false
       }, def));
       if (prev) Bus.emit('app:updated', def.id);
       Bus.emit('app:registered', def.id);

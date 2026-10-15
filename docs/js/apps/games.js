@@ -107,7 +107,8 @@
     color: '#22c55e', color2: '#166534',
     category: 'Игры',
     keywords: 'snake змейка 3d three.js игра arcade',
-    width: 640, height: 660, minWidth: 360, minHeight: 440,
+        storeOnly: true,
+width: 640, height: 660, minWidth: 360, minHeight: 440,
     mount(win) {
       const N = 16;
       let snake = [], dir = { x: 1, y: 0 }, nextDir = { x: 1, y: 0 }, food = null, bonus = null;
@@ -214,7 +215,8 @@
         win.body.querySelector('#sn-b').textContent = rec;
         OS.sfx.play('error');
         over.classList.remove('hidden');
-        over.innerHTML = '<div><h3>Игра окончена</h3><p>Очки: <b>' + score + '</b> · длина ' + snake.length + '</p><p class="dim">Рекорд: ' + rec + '</p><button class="btn btn-accent" id="sn-again">Ещё раз</button></div>';
+        const earned = OS.coins.add(Math.floor(score / 10));
+        over.innerHTML = '<div><h3>Игра окончена</h3><p>Очки: <b>' + score + '</b> · длина ' + snake.length + '</p><p class="dim">Рекорд: ' + rec + ' · монет: ' + earned + ' (+' + Math.floor(score / 10) + ')</p><button class="btn btn-accent" id="sn-again">Ещё раз</button></div>';
         over.querySelector('#sn-again').onclick = reset;
       }
       const over = OS.el('div', { class: 'gm-over hidden' });
@@ -256,7 +258,8 @@
     color: '#ef4444', color2: '#7f1d1d',
     category: 'Игры',
     keywords: 'minesweeper сапёр мины 3d three.js',
-    width: 700, height: 680, minWidth: 380, minHeight: 460,
+        storeOnly: true,
+width: 700, height: 680, minWidth: 380, minHeight: 460,
     mount(win) {
       const LEVELS = { easy: { w: 9, h: 9, m: 10, name: 'Новичок' }, mid: { w: 12, h: 12, m: 26, name: 'Любитель' }, hard: { w: 14, h: 10, m: 38, name: 'Эксперт' } };
       let lv = OS.store.get('mines.lv', 'easy'), G = null, timer = null, secs = 0;
@@ -403,7 +406,8 @@
           G.over = true; clearInterval(timer);
           best('mines.' + lv, Math.max(1, 1000 - secs));
           OS.sfx.play('ok');
-          OS.toast('Победа!', 'Сапёр 3D · ' + LEVELS[lv].name + ' за ' + secs + ' с', { icon: 'star' });
+          OS.coins.add(50);
+          OS.toast('Победа! +50 монет', 'Сапёр 3D · ' + LEVELS[lv].name + ' за ' + secs + ' с · монеты доступны в Steam', { icon: 'coin' });
           over.classList.remove('hidden');
           over.innerHTML = '<div><h3>Поле разминировано! 🎉</h3><p>Время: <b>' + secs + ' с</b></p><button class="btn btn-accent" id="ms-again">Ещё раз</button></div>';
           over.querySelector('#ms-again').onclick = reset;
@@ -470,7 +474,8 @@
     color: '#f59e0b', color2: '#b91c1c',
     category: 'Игры',
     keywords: '2048 3d three.js головоломка puzzle числа',
-    width: 560, height: 680, minWidth: 360, minHeight: 480,
+        storeOnly: true,
+width: 560, height: 680, minWidth: 360, minHeight: 480,
     mount(win) {
       const S = 4;
       let grid = empty(), score = 0, bestV = best('2048'), dead = false, wonShown = false, busy = false;
@@ -655,7 +660,7 @@
           busy = false;
           hud();
           if (!wonShown && grid.some((r) => r.some((c) => c && c.v >= 2048))) { wonShown = true; showOver('2048! 🎉', 'Легендарная плитка собрана в 3D.', 'Продолжить', false); }
-          if (!canMove()) { dead = true; bestV = best('2048', score); bEl.textContent = bestV; showOver('Игра окончена', 'Счёт: ' + score + ' · рекорд: ' + bestV, 'Заново', true); }
+          if (!canMove()) { dead = true; bestV = best('2048', score); bEl.textContent = bestV; const add = Math.floor(score / 50); OS.coins.add(add); showOver('Игра окончена', 'Счёт: ' + score + ' · рекорд: ' + bestV + ' · +' + add + ' монет', 'Заново', true); }
         };
         requestAnimationFrame(anim);
       }
@@ -743,7 +748,8 @@
     color: '#06b6d4', color2: '#1e3a8a',
     category: 'Игры',
     keywords: 'breakout арканоид 3d three.js кирпичи arcade',
-    width: 760, height: 660, minWidth: 400, minHeight: 460,
+        storeOnly: true,
+width: 760, height: 660, minWidth: 400, minHeight: 460,
     mount(win) {
       const FW = 16, FH = 11;
       const st = { px: 0, bx: 0, by: -4, vx: 0, vy: 0, run: false, lives: 3, score: 0, level: 1, keys: {} };
@@ -807,11 +813,13 @@
       stage.append(over);
       function gameOver(winAll) {
         st.run = false;
+        const add = Math.floor(st.score / 20) + (winAll ? 100 : 0);
+        OS.coins.add(add);
         const rec = best('breakout', st.score);
         win.body.querySelector('#bk-b').textContent = rec;
         OS.sfx.play(winAll ? 'ok' : 'error');
         over.classList.remove('hidden');
-        over.innerHTML = '<div><h3>' + (winAll ? 'Все уровни пройдены! 🏆' : 'Игра окончена') + '</h3><p>Очки: <b>' + st.score + '</b></p><p class="dim">Рекорд: ' + rec + '</p><button class="btn btn-accent" id="bk-a">Ещё раз</button></div>';
+        over.innerHTML = '<div><h3>' + (winAll ? 'Все уровни пройдены! 🏆' : 'Игра окончена') + '</h3><p>Очки: <b>' + st.score + '</b></p><p class="dim">Рекорд: ' + rec + ' · +' + add + ' монет</p><button class="btn btn-accent" id="bk-a">Ещё раз</button></div>';
         over.querySelector('#bk-a').onclick = reset;
       }
       function step(dt) {
@@ -899,7 +907,8 @@
     color: '#6366f1', color2: '#0f172a',
     category: 'Игры',
     keywords: '3d doom three.js лабиринт шутер first person рейкастинг',
-    width: 860, height: 620, minWidth: 400, minHeight: 360,
+        storeOnly: true,
+width: 860, height: 620, minWidth: 400, minHeight: 360,
     mount(win) {
       const MAP = [
         '################',
@@ -920,7 +929,8 @@
         '################'
       ];
       const MW = MAP[0].length, MH = MAP.length;
-      const P = { x: 1.5, y: 1.5, yaw: .6, pitch: 0 };
+      // yaw = camera.rotation.y; вперёд = (-sin yaw, -cos yaw), вправо = (cos yaw, -sin yaw)
+      const P = { x: 1.5, y: 1.5, yaw: -Math.PI / 2, pitch: 0 };
       const st = { keys: {}, coins: [], got: 0, time: 0, showMap: true };
 
       win.body.innerHTML =
@@ -1011,7 +1021,7 @@
         }
         sEl.textContent = '0/' + st.coins.length;
       }
-      function reset() { P.x = 1.5; P.y = 1.5; P.yaw = .6; P.pitch = 0; over.classList.add('hidden'); placeCoins(); }
+      function reset() { P.x = 1.5; P.y = 1.5; P.yaw = -Math.PI / 2; P.pitch = 0; over.classList.add('hidden'); placeCoins(); }
       const over = OS.el('div', { class: 'gm-over hidden' });
       stage.append(over);
 
@@ -1032,7 +1042,7 @@
         }
         st.coins.forEach((c) => { if (c.got) return; mctx.fillStyle = '#fbbf24'; mctx.beginPath(); mctx.arc(c.x * 7, c.y * 7, 2.2, 0, 7); mctx.fill(); });
         mctx.save();
-        mctx.translate(P.x * 7, P.y * 7); mctx.rotate(P.yaw);
+        mctx.translate(P.x * 7, P.y * 7); mctx.rotate(Math.atan2(-Math.cos(P.yaw), -Math.sin(P.yaw)));
         mctx.fillStyle = '#22d3ee';
         mctx.beginPath(); mctx.moveTo(4.6, 0); mctx.lineTo(-3, 3); mctx.lineTo(-3, -3); mctx.closePath(); mctx.fill();
         mctx.restore();
@@ -1050,11 +1060,12 @@
         if (st.keys.left) P.yaw += rot;
         if (st.keys.right) P.yaw -= rot;
         let fx = 0, fy = 0;
-        const dx0 = Math.sin(P.yaw), dy0 = Math.cos(P.yaw);
-        if (st.keys.up) { fx += dx0; fy += dy0; }
-        if (st.keys.down) { fx -= dx0; fy -= dy0; }
-        if (st.keys.strafeL) { fx -= dy0; fy += dx0; }
-        if (st.keys.strafeR) { fx += dy0; fy -= dx0; }
+        const fx0 = -Math.sin(P.yaw), fz0 = -Math.cos(P.yaw);   // вперёд
+        const rx0 = Math.cos(P.yaw), rz0 = -Math.sin(P.yaw);     // вправо
+        if (st.keys.up) { fx += fx0; fy += fz0; }
+        if (st.keys.down) { fx -= fx0; fy -= fz0; }
+        if (st.keys.strafeR) { fx += rx0; fy += rz0; }
+        if (st.keys.strafeL) { fx -= rx0; fy -= rz0; }
         const len = Math.hypot(fx, fy);
         if (len) {
           fx = fx / len * sp; fy = fy / len * sp;
@@ -1075,6 +1086,7 @@
       }
       function finish() {
         const secs = Math.round(st.time / 1000);
+        OS.coins.add(100);
         const rec = best('qwen3d', Math.max(1, 3000 - secs * 10));
         over.classList.remove('hidden');
         over.innerHTML = '<div><h3>Лабиринт очищен! 🏆</h3><p>Все монеты собраны за <b>' + secs + ' с</b></p><p class="dim">Лучший результат: ' + rec + '</p><button class="btn btn-accent" id="d3-a">Играть снова</button></div>';
@@ -1101,7 +1113,7 @@
       renderer.domElement.addEventListener('pointerdown', (e) => { drag = true; lx = e.clientX; ly = e.clientY; });
       renderer.domElement.addEventListener('pointermove', (e) => {
         if (!drag) return;
-        P.yaw -= (e.clientX - lx) * .005;
+        P.yaw -= (e.clientX - lx) * .005;   // тянем мышь вправо — смотрим вправо
         P.pitch = OS.clamp(P.pitch - (e.clientY - ly) * .003, -.6, .6);
         lx = e.clientX; ly = e.clientY;
       });
@@ -1113,7 +1125,7 @@
         st.time += dt;
         move(dt);
         camera.position.set(P.x, .58 + Math.sin(st.bob || 0) * .035, P.y);
-        camera.rotation.y = -P.yaw + Math.PI;
+        camera.rotation.y = P.yaw;
         camera.rotation.x = P.pitch;
         st.coins.forEach((c) => { if (!c.got) { c.mesh.rotation.z += dt * .002; c.mesh.position.y = .5 + Math.sin(t * .003 + c.x) * .08; } });
         st.pos = [P.x, P.y];
@@ -1125,6 +1137,7 @@
       addEventListener('resize', OS.debounce(onRs, 150));
       onRs(); reset();
       win.data.state = st;
+      win.data.api = { get P() { return P; }, camera: camera };
       return () => { stop(); document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); removeEventListener('resize', onRs); renderer.dispose(); };
     }
   });

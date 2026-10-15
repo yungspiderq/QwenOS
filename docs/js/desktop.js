@@ -130,7 +130,7 @@
       this.iconsEl.style.display = S.get('desktopIcons') ? '' : 'none';
       if (!S.get('desktopIcons')) return;
 
-      const apps = OS.Apps.list().filter((a) => a.desktop !== false && OS.Apps.installed(a.id));
+      const apps = OS.Apps.list().filter((a) => a.desktop !== false && !a.noStart && OS.Apps.installed(a.id));
       const prio = { trash: 0, mypc: 1 };
       apps.sort((a, b) => (prio[a.id] == null ? 9 : prio[a.id]) - (prio[b.id] == null ? 9 : prio[b.id]));
       apps.forEach((a) => {

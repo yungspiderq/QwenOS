@@ -220,11 +220,11 @@
     renderStart(query) {
       const user = S.get('user') || 'user';
       const av = S.get('avatarText') || user[0].toUpperCase();
-      const results = OS.Apps.search(query).filter((a) => OS.Apps.installed(a.id) || !a.storeOnly);
+      const results = OS.Apps.search(query).filter((a) => !a.noStart && (OS.Apps.installed(a.id) || !a.storeOnly));
       const cats = new Map();
       results.forEach((a) => { if (!cats.has(a.category)) cats.set(a.category, []); cats.get(a.category).push(a); });
 
-      const recent = (OS.store.get('recent', []) || []).map((id) => OS.Apps.get(id)).filter((a) => a && OS.Apps.installed(a.id)).slice(0, 6);
+      const recent = (OS.store.get('recent', []) || []).map((id) => OS.Apps.get(id)).filter((a) => a && OS.Apps.installed(a.id) && !a.noStart).slice(0, 6);
 
       this.startEl.innerHTML =
         '<div class="sm-head"><div class="sm-search">' + OS.svg('search', 16) + '<input placeholder="Поиск приложений и команд…" spellcheck="false" value="' + OS.esc(query) + '"></div></div>' +

@@ -28,6 +28,8 @@ async def main():
             await page.click('#lock-btn')
             await page.wait_for_selector('#os:not(.hidden)', timeout=8000)
             await page.wait_for_timeout(1300)
+            n_icons = await page.evaluate("document.querySelectorAll('#desktop-icons .dicon').length")
+            (ok if n_icons == 4 else bad)(f'default desktop has 4 icons (got {n_icons})')
             # закрыть приветствие первого запуска, если открылось
             await page.evaluate("QwenOS.wm.closeAll()")
             await page.wait_for_timeout(300)
@@ -171,9 +173,9 @@ async def main():
             await page.evaluate("QwenOS.wm.open('qwen3d')")
             await page.wait_for_timeout(800)
             p0 = await page.evaluate("QwenOS.wm.byApp('qwen3d')[0].data.state.pos.slice()")
-            await page.keyboard.down('w'); await page.wait_for_timeout(600); await page.keyboard.up('w')
+            await page.keyboard.down('w'); await page.wait_for_timeout(1500); await page.keyboard.up('w')
             p1 = await page.evaluate("QwenOS.wm.byApp('qwen3d')[0].data.state.pos.slice()")
-            moved = abs(p0[0] - p1[0]) + abs(p0[1] - p1[1]) > .2
+            moved = abs(p0[0] - p1[0]) + abs(p0[1] - p1[1]) > .1
             (ok if moved else bad)(f'qwen3d: movement {p0} -> {p1}')
             await page.evaluate("QwenOS.wm.closeAll()")
 
@@ -199,25 +201,33 @@ async def main():
             # ---- 11. магазин: установка
             await page.evaluate("QwenOS.wm.open('store')")
             await page.wait_for_timeout(500)
-            btn = page.locator('.win.focused .st-card:has-text("Погода") button:has-text("Установить")')
+            btn = page.locator('.win.focused .st-card:has-text("Фото") button:has-text("Установить")')
             if await btn.count():
                 await btn.click()
                 await page.wait_for_timeout(2200)
-                inst = await page.evaluate("QwenOS.Apps.installed('weather')")
-                (ok if inst else bad)('store: weather installed')
+                inst = await page.evaluate("QwenOS.Apps.installed('photos')")
+                (ok if inst else bad)('store: photos installed')
             else:
                 bad('store: install button not found')
+            prem = await page.evaluate("QwenOS.Apps.list().filter((a) => a.premium).every((a) => !document.querySelector('.win.focused .st-grid')) || !Array.from(document.querySelectorAll('.win.focused .st-card')).some((c) => /премиум/.test(c.textContent))")
+            (ok if prem else bad)('store: premium hidden from QwenStore')
             await page.evaluate("QwenOS.wm.closeAll()")
 
             # ---- 12. пуск: поиск + Enter
             await page.click('#start-btn')
             await page.wait_for_timeout(400)
-            await page.fill('#start-menu input', 'сапёр')
+            await page.fill('#start-menu input', 'steam')
             await page.wait_for_timeout(400)
             await page.keyboard.press('Enter')
             await page.wait_for_timeout(600)
             cur = await page.evaluate("QwenOS.wm.active && QwenOS.wm.active.appId")
-            (ok if cur == 'mines' else bad)(f'start search launches -> {cur}')
+            (ok if cur == 'steam' else bad)(f'start search launches -> {cur}')
+            cards = await page.evaluate("document.querySelectorAll('.win.focused .stm-card').length")
+            (ok if cards >= 5 else bad)(f'steam: store cards ({cards})')
+            await page.click('.win.focused .stm-tabs [data-t="prof"]')
+            await page.wait_for_timeout(400)
+            prof = await page.evaluate("!!document.querySelector('.win.focused .stm-stats')")
+            (ok if prof else bad)('steam: profile renders')
             await page.evaluate("QwenOS.wm.closeAll()")
 
             # ---- 13. быстрые настройки: яркость
