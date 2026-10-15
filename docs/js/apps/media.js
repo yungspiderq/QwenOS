@@ -894,4 +894,43 @@ width: 700, height: 460, minWidth: 320, minHeight: 240,
       return () => { cancelAnimationFrame(raf); document.removeEventListener('keydown', onKey); };
     }
   });
+
+  /* =======================================================================
+     ANIMIX — приложение для просмотра аниме (контент скоро)
+     ======================================================================= */
+  OS.Apps.register({
+    id: 'animix',
+    name: 'Animix',
+    icon: 'tv',
+    color: '#f43f5e', color2: '#7c3aed',
+    category: 'Мультимедиа',
+    storeOnly: true,
+    desktop: false,
+    keywords: 'аниме anime animix анимикс смотреть плеер',
+    width: 860, height: 560, minWidth: 420, minHeight: 340,
+    mount(win, api) {
+      win.body.innerHTML =
+        '<div class="anx">' +
+          '<div class="anx-hero">' +
+            '<div class="anx-logo">' + OS.svg('tv', 40) + '</div>' +
+            '<h1>Animix</h1>' +
+            '<p>Приложение для просмотра аниме в QwenOS.</p>' +
+          '</div>' +
+          '<div class="anx-empty">' +
+            OS.svg('film', 46) +
+            '<h3>Каталог скоро появится</h3>' +
+            '<p class="dim">Пока здесь пусто: плеер, тайтлы и расписание выхода серий находятся в производстве.<br>Загляните позже — приложение уже установлено и ждёт контент.</p>' +
+            '<div class="row" style="gap:8px;justify-content:center;margin-top:14px">' +
+              '<button class="btn btn-accent btn-sm" data-a="notify">Сообщить, когда появится</button>' +
+              '<button class="btn btn-sm" data-a="store">В QwenStore</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="anx-foot">Animix · версия 0.1.0-preview · плеер и каталог будут добавлены позже</div>' +
+        '</div>';
+      win.body.querySelector('[data-a="notify"]').onclick = () => OS.toast('Animix', 'Спасибо! Сообщим уведомлением, когда загрузим первый тайтл', { icon: 'bell', timeout: 4200 });
+      win.body.querySelector('[data-a="store"]').onclick = () => api.open('store');
+      win.data.state = { empty: true };
+    }
+  });
+
 })(window.OS);

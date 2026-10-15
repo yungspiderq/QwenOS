@@ -3,7 +3,7 @@
    Стратегия: network-first для документов, cache-first для ассетов.
    Позволяет системе работать полностью офлайн (PWA).
    ========================================================================== */
-const VERSION = 'qwenos-sw-v3.0.0-19';
+const VERSION = 'qwenos-sw-v3.0.0-20';
 const CORE = [
   './',
   './index.html',
@@ -19,6 +19,7 @@ const CORE = [
   './js/wm.js',
   './js/updater.js',
   './js/apartment.js',
+  './js/work.js',
   './js/vendor/three.min.js',
   './js/desktop.js',
   './js/taskbar.js',

@@ -739,3 +739,42 @@
 .bnk-qa-l.bad { border-color: var(--err); background: color-mix(in srgb, var(--err) 16%, transparent); }
 
 .stm-plus { margin-left: 3px; opacity: .75; font-weight: 700; }
+
+/* ======================================================================
+   РАБОЧИЕ СМЕНЫ (3D)
+   ====================================================================== */
+.work-hud .work-title { color: #a7f3d0; }
+.work-hud .plus { color: var(--ok); }
+.work-panel { position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; background: rgba(4,6,14,.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.work-panel .bnk-type, .work-panel .bnk-qa { width: min(540px, 92%); background: var(--panel-solid); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 22px 24px; }
+.work-result { position: absolute; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(4,6,14,.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); text-align: center; }
+.work-result h3 { margin: 0 0 8px; font-size: 24px; }
+.work-result .plus { color: var(--ok); }
+.work-result button { margin-top: 14px; }
+
+/* ======================================================================
+   COUNTER-STRIKE
+   ====================================================================== */
+.cs-hud .cs-hp { display: flex; align-items: center; gap: 8px; min-width: 130px; }
+.cs-hp i { display: block; width: 84px; height: 8px; border-radius: 99px; background: linear-gradient(90deg,#22c55e,#84cc16); transition: width .2s; }
+.cs-cross { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px; pointer-events: none; z-index: 3; }
+.cs-cross::before, .cs-cross::after { content: ""; position: absolute; background: rgba(120,255,160,.9); box-shadow: 0 0 6px rgba(0,0,0,.8); }
+.cs-cross::before { left: 50%; top: 0; width: 2px; height: 100%; margin-left: -1px; }
+.cs-cross::after { top: 50%; left: 0; height: 2px; width: 100%; margin-top: -1px; }
+.cs-msg { position: absolute; left: 50%; bottom: 16%; transform: translateX(-50%); padding: 8px 16px; border-radius: 99px; background: rgba(6,8,14,.72); border: 1px solid var(--border); color: #dfe6ff; font-size: 12.4px; z-index: 3; pointer-events: none; }
+.cs-stage { transition: box-shadow .12s; }
+.cs-stage.cs-hurt { box-shadow: inset 0 0 90px 30px rgba(220,38,38,.5); }
+
+/* ======================================================================
+   ANIMIX
+   ====================================================================== */
+.anx { height: 100%; display: flex; flex-direction: column; background: radial-gradient(900px 500px at 70% -10%, rgba(124,58,237,.28), transparent 60%), linear-gradient(180deg, #14081a, #0b0614 60%, #07040d); color: #f3e8ff; }
+.anx-hero { text-align: center; padding: 34px 20px 10px; }
+.anx-logo { width: 86px; height: 86px; margin: 0 auto 12px; border-radius: 24px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #f43f5e, #7c3aed); box-shadow: 0 16px 44px rgba(244,63,94,.35); }
+.anx-hero h1 { margin: 0; font-size: 27px; letter-spacing: .04em; }
+.anx-hero p { margin: 6px 0 0; color: #b8a6cc; font-size: 13px; }
+.anx-empty { flex: 1; display: grid; place-items: center; text-align: center; padding: 20px; color: #b8a6cc; }
+.anx-empty svg { opacity: .35; margin-bottom: 12px; }
+.anx-empty h3 { margin: 0 0 8px; color: #f3e8ff; font-size: 18px; }
+.anx-empty p { margin: 0; line-height: 1.65; font-size: 12.8px; }
+.anx-foot { flex: none; text-align: center; padding: 10px; border-top: 1px solid rgba(255,255,255,.08); font-size: 11px; color: #7d6b8f; }

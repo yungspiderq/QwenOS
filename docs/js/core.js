@@ -10,7 +10,7 @@
     codename: 'Aurora',
     kernel: 'qwen-kernel 6.1.0-web',
     build: new Date().toISOString().slice(0, 10),
-    buildNumber: 3024,
+    buildNumber: 3025,
     startedAt: Date.now()
   };
   global.OS = OS;
@@ -291,6 +291,9 @@
     steam: '<circle cx="12" cy="12" r="8.8"/><circle cx="9.6" cy="9.8" r="2.9"/><circle cx="15.4" cy="14.6" r="1.9"/><path d="M12.2 11.9l-1.5 1.6M3.4 14.2l3.6 1.4M14.2 3.6l1.5 3.5"/>',
     qr: '<rect x="3.4" y="3.4" width="6.6" height="6.6" rx="1.4"/><rect x="14" y="3.4" width="6.6" height="6.6" rx="1.4"/><rect x="3.4" y="14" width="6.6" height="6.6" rx="1.4"/><path d="M14 14h2.6v2.6H14zM18 18h2.6v2.6H18zM14 20.6h1.4M20.6 14v1.4"/>',
     scan: '<path d="M4 8.4V5.6A1.6 1.6 0 0 1 5.6 4h2.8M15.6 4h2.8A1.6 1.6 0 0 1 20 5.6v2.8M20 15.6v2.8a1.6 1.6 0 0 1-1.6 1.6h-2.8M8.4 20H5.6A1.6 1.6 0 0 1 4 18.4v-2.8"/><path d="M4 12h16"/>',
+    cross: '<circle cx="12" cy="12" r="7.2"/><path d="M12 2.6v4.4M12 17v4.4M2.6 12H7M17 12h4.4"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>',
+    tv: '<rect x="3" y="7.2" width="18" height="12.6" rx="2.4"/><path d="M8.2 3.4l3.8 3.8 3.8-3.8"/><path d="M10.4 11l4.4 2.6-4.4 2.6z" fill="currentColor" stroke="none"/>',
+    film: '<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M7 4.5v15M17 4.5v15M3 9h4M3 15h4M17 9h4M17 15h4"/>',
     archive: '<rect x="3" y="4" width="18" height="4.6" rx="1.6"/><path d="M4.8 8.6v10a1.6 1.6 0 0 0 1.6 1.6h11.2a1.6 1.6 0 0 0 1.6-1.6v-10"/><path d="M10 12.4h4"/>',
     send: '<path d="M21 3L10.4 13.6M21 3l-6.8 18-3.8-7.4L3 9.8z"/>'
   };
@@ -348,7 +351,8 @@
       const map = {
         click: [720, .035, .05, 'sine'], open: [520, .09, .07, 'triangle'], close: [330, .08, .06, 'sine'],
         notify: [880, .13, .09, 'sine'], error: [170, .18, .1, 'sawtooth'], ok: [660, .1, .07, 'triangle'],
-        boot: [420, .5, .06, 'sine']
+        boot: [420, .5, .06, 'sine'],
+        shot: [150, .07, .13, 'sawtooth'], hit: [940, .05, .09, 'square'], reload: [430, .1, .06, 'triangle']
       };
       const m = map[kind] || map.click;
       o.type = m[3]; o.frequency.setValueAtTime(m[0], now);

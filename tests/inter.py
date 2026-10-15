@@ -29,8 +29,9 @@ async def main():
             await page.wait_for_selector('#os:not(.hidden)', timeout=8000)
             await page.wait_for_timeout(1300)
             n_icons = await page.evaluate("document.querySelectorAll('#desktop-icons .dicon').length")
-            (ok if n_icons == 4 else bad)(f'default desktop has 4 icons (got {n_icons})')
-            await page.evaluate("QwenOS.coins.add(5000); ['terminal','notes','calculator','snake','mines','game2048','breakout','qwen3d','paint','music'].forEach((id) => QwenOS.Apps.buy(id))")
+            ids = await page.evaluate("Array.from(document.querySelectorAll('#desktop-icons .dicon')).map((d) => d.dataset.app || d.dataset.file)")
+            (ok if n_icons == 4 else bad)(f'default desktop has 4 icons (got {n_icons}: {ids})')
+            await page.evaluate("QwenOS.coins.add(5000); ['terminal','notes','calculator','snake','mines','game2048','breakout','qwen3d','paint','music','cs'].forEach((id) => QwenOS.Apps.buy(id))")
             # закрыть приветствие первого запуска, если открылось
             await page.evaluate("QwenOS.wm.closeAll()")
             await page.wait_for_timeout(300)
@@ -230,15 +231,37 @@ async def main():
             jobs = await page.evaluate("document.querySelectorAll('.win.focused .bnk-job').length")
             (ok if jobs == 3 else bad)(f'bank: 3 jobs listed ({jobs})')
             await page.click('.win.focused [data-job="courier"]')
-            await page.wait_for_timeout(700)
-            cell = page.locator('.win.focused .bnk-cell.on')
-            if await cell.count():
-                await cell.click()
-                await page.wait_for_timeout(300)
-                shifting = await page.evaluate("QwenOS.wm.byApp('bank')[0].data.state.shift")
-                (ok if shifting else bad)('bank: courier shift runs')
-            else:
-                bad('bank: courier target not found')
+            await page.wait_for_timeout(1100)
+            ph0 = await page.evaluate("QwenOS.work.debug && QwenOS.work.debug.phase")
+            (ok if ph0 == 'home' else bad)(f'work 3d: shift starts at home ({ph0})')
+            await page.evaluate("QwenOS.work.debug.teleportDoor()")
+            await page.wait_for_timeout(250)
+            await page.keyboard.press('e')
+            await page.wait_for_timeout(1300)
+            ph1 = await page.evaluate("QwenOS.work.debug && QwenOS.work.debug.phase")
+            (ok if ph1 == 'site' else bad)(f'work 3d: door leads to site ({ph1})')
+            await page.evaluate("QwenOS.work.debug.finish()")
+            await page.wait_for_timeout(600)
+            await page.click('.work-result [data-back]')
+            await page.wait_for_timeout(600)
+            gone = await page.evaluate("!document.querySelector('.work-result') && !QwenOS.work.active")
+            (ok if gone else bad)('work 3d: shift closes and returns to bank')
+            await page.evaluate("QwenOS.wm.closeAll()")
+
+            # ---- 11g. counter-strike монтируется
+            await page.evaluate("QwenOS.wm.open('cs')")
+            await page.wait_for_timeout(900)
+            csok = await page.evaluate("!!document.querySelector('.win.focused .cs-hp') && QwenOS.wm.byApp('cs')[0].data.state.hp === 100")
+            (ok if csok else bad)('cs: mounted with HUD and full HP')
+            await page.keyboard.press('r')
+            await page.wait_for_timeout(200)
+            await page.evaluate("QwenOS.wm.closeAll()")
+
+            # ---- 11h. animix пустая витрина
+            await page.evaluate("QwenOS.wm.open('animix')")
+            await page.wait_for_timeout(500)
+            anx = await page.evaluate("!!document.querySelector('.win.focused .anx-empty')")
+            (ok if anx else bad)('animix: empty catalog placeholder')
             await page.evaluate("QwenOS.wm.closeAll()")
 
             # ---- 12. пуск: поиск + Enter
