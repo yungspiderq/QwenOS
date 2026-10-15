@@ -1149,7 +1149,9 @@ width: 860, height: 620, minWidth: 400, minHeight: 360,
   });
 
   /* =======================================================================
-     COUNTER-STRIKE — FPS на three.js: раунды, враги, отдача, трейсеры
+     COUNTER-STRIKE: QWEN OFFENSIVE — полноценный матчевый FPS на three.js
+     Экономика денег, закупочная фаза (B), 5 стволов с разными ТТХ, броня,
+     прыжки, скоуп AWP, киллфид, раунды до 8 побед, ИИ противников.
      ======================================================================= */
   OS.Apps.register({
     id: 'cs',
@@ -1159,271 +1161,450 @@ width: 860, height: 620, minWidth: 400, minHeight: 360,
     category: 'Игры',
     storeOnly: true,
     price: 150,
-    keywords: 'counter strike cs кс шутер fps shooter стрельба',
-    width: 940, height: 640, minWidth: 480, minHeight: 400,
+    keywords: 'counter strike cs кс шутер fps shooter стрельба раунды закуп',
+    width: 1000, height: 680, minWidth: 520, minHeight: 420,
     mount(win) {
-      const st = { hp: 100, ammo: 30, reserve: 90, round: 1, kills: 0, reloading: false, over: false };
+      const WEAPONS = {
+        glock: { name: 'Glock-18', price: 0, dmg: 26, hs: 3.2, rpm: 400, mag: 20, res: 120, rl: 1.8, spread: .013, auto: false, rec: .004, mov: 1.7 },
+        mp9: { name: 'MP9', price: 1250, dmg: 21, hs: 3.0, rpm: 850, mag: 30, res: 120, rl: 2.0, spread: .024, auto: true, rec: .005, mov: 1.35 },
+        ak47: { name: 'AK-47', price: 2700, dmg: 36, hs: 4.1, mag: 30, res: 90, rl: 2.4, spread: .015, auto: true, rec: .016, mov: 1.5 },
+        m4a1: { name: 'M4A1-S', price: 3100, dmg: 32, hs: 4.0, mag: 30, res: 90, rl: 2.2, spread: .011, auto: true, rec: .011, mov: 1.45 },
+        awp: { name: 'AWP', price: 4750, dmg: 115, hs: 2.2, rpm: 41, mag: 10, res: 30, rl: 3.4, spread: .0025, auto: false, rec: .05, mov: 2.6 }
+      };
+      const M = { money: 800, hp: 100, armor: 0, round: 1, sp: 0, se: 0, loss: 0, time: 90, alive: true, matchOver: false, kills: 0, deaths: 0 };
+      let owned = ['glock'], gun = 'glock', mag = {}, res = {};
+      const resetAmmo = () => { owned.forEach((w) => { mag[w] = WEAPONS[w].mag; if (res[w] == null) res[w] = WEAPONS[w].res; }); };
+      resetAmmo();
+      let reloading = false, firing = false, scoped = false, recoil = 0, spreadNow = 0, lastShot = 0;
+      let roundState = 'live';
+
       win.body.innerHTML =
         '<div class="gm">' +
-          '<div class="gm-hud cs-hud">' +
-            '<span class="cs-hp"><i></i><b>100</b></span>' +
-            '<span>Патроны <b id="cs-a">30/90</b></span>' +
-            '<span>Раунд <b id="cs-r">1</b></span>' +
-            '<span>Фраги <b id="cs-k">0</b></span>' +
-            '<div class="gm-hud-btns"><button class="btn btn-sm" id="cs-reload">R</button><button class="btn btn-sm btn-accent" id="cs-rst">Заново</button></div>' +
+          '<div class="gm-hud cs-top">' +
+            '<span class="cs-score"><b class="cs-sp">0</b>:<b class="cs-se">0</b></span>' +
+            '<span class="cs-time">1:30</span>' +
+            '<span class="cs-round">Раунд 1</span>' +
+            '<span class="cs-killfeed"></span>' +
           '</div>' +
-          '<div class="gm-stage gm-3d cs-stage"><div class="cs-cross"></div><div class="cs-msg">Кликните, чтобы захватить мышь</div></div>' +
-          '<div class="gm-tip">WASD — движение · мышь — прицел (pointer lock) · ЛКМ — огонь · R — перезарядка · Esc — отпустить мышь</div>' +
+          '<div class="gm-stage gm-3d cs-stage"></div>' +
+          '<div class="gm-hud cs-bot">' +
+            '<span class="cs-hp">' + OS.svg('shield', 14) + '<i></i><b>100</b></span>' +
+            '<span class="cs-money">$800</span>' +
+            '<span class="cs-gun">Glock-18</span>' +
+            '<span class="cs-ammo">20/120</span>' +
+          '</div>' +
+          '<div class="gm-tip">WASD · Shift — тихо · Space — прыжок · ЛКМ — огонь · ПКМ (AWP) — прицел · B — закуп · R — перезарядка · 1…5 — смена ствола</div>' +
         '</div>';
-      const stage = win.body.querySelector('.gm-stage');
-      const hpBar = win.body.querySelector('.cs-hp i'), hpEl = win.body.querySelector('.cs-hp b');
-      const aEl = win.body.querySelector('#cs-a'), rEl = win.body.querySelector('#cs-r'), kEl = win.body.querySelector('#cs-k');
-      const msg = win.body.querySelector('.cs-msg');
+      const stage = win.body.querySelector('.cs-stage');
+      const el = (q) => win.body.querySelector(q);
+      const hudHp = el('.cs-hp b'), hudHpBar = el('.cs-hp i'), hudMoney = el('.cs-money'), hudGun = el('.cs-gun'), hudAmmo = el('.cs-ammo');
+      const hudTime = el('.cs-time'), hudRound = el('.cs-round'), hudSp = el('.cs-sp'), hudSe = el('.cs-se'), feed = el('.cs-killfeed');
+
       if (!KIT.ok()) { stage.innerHTML = FALLBACK; return; }
       const renderer = KIT.renderer(stage);
       if (!renderer) return;
+      // оверлеи создаём после рендерера (KIT.renderer очищает stage)
+      const cross = OS.el('div', { class: 'cs-cross', html: '<i></i><i></i><i></i><i></i>' });
+      const scopeEl = OS.el('div', { class: 'cs-scope hidden' });
+      const msg = OS.el('div', { class: 'cs-msg', text: 'Клик — захват мыши · B — закупка' });
+      const buyEl = OS.el('div', { class: 'cs-buy hidden' });
+      const overEl = OS.el('div', { class: 'cs-over hidden' });
+      stage.append(cross, scopeEl, msg, buyEl, overEl);
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x1a1712);
-      scene.fog = new THREE.Fog(0x1a1712, 18, 55);
-      const camera = new THREE.PerspectiveCamera(75, 1, .05, 120);
+      scene.background = new THREE.Color(0xc9b189);
+      scene.fog = new THREE.Fog(0xc9b189, 26, 70);
+      const camera = new THREE.PerspectiveCamera(75, 1, .05, 150);
       camera.rotation.order = 'YXZ';
-      scene.add(new THREE.AmbientLight(0xd8c9a8, .8));
-      const sun = new THREE.DirectionalLight(0xffe0b0, .9); sun.position.set(12, 18, 6); scene.add(sun);
+      scene.add(new THREE.AmbientLight(0xfff2dd, .85));
+      const sun = new THREE.DirectionalLight(0xffe2b0, 1.05); sun.position.set(18, 26, 8); scene.add(sun);
 
-      // арена
-      const ARENA = 26;
-      const groundT = KIT.label('', null, null); // заглушка не нужна; рисуем свою
-      const gt = (function () {
+      /* ---------- карта ---------- */
+      const ARENA = 34;
+      const gt = (() => {
         const c = document.createElement('canvas'); c.width = c.height = 256;
         const x = c.getContext('2d');
-        x.fillStyle = '#8a7a5f'; x.fillRect(0, 0, 256, 256);
-        x.fillStyle = 'rgba(0,0,0,.12)';
-        for (let i = 0; i < 260; i++) x.fillRect(Math.random() * 256, Math.random() * 256, 3, 3);
-        x.strokeStyle = 'rgba(0,0,0,.18)'; x.lineWidth = 2;
+        x.fillStyle = '#b09a72'; x.fillRect(0, 0, 256, 256);
+        x.fillStyle = 'rgba(120,100,70,.35)';
+        for (let i = 0; i < 300; i++) x.fillRect(Math.random() * 256, Math.random() * 256, 3, 3);
+        x.strokeStyle = 'rgba(90,75,50,.35)'; x.lineWidth = 2;
         for (let i = 0; i <= 256; i += 64) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, 256); x.stroke(); x.beginPath(); x.moveTo(0, i); x.lineTo(256, i); x.stroke(); }
-        const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(8, 8); return t;
+        const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 10); return t;
       })();
       const ground = new THREE.Mesh(new THREE.PlaneGeometry(ARENA, ARENA), new THREE.MeshLambertMaterial({ map: gt }));
       ground.rotation.x = -Math.PI / 2; scene.add(ground);
-      const wallMat = new THREE.MeshLambertMaterial({ color: 0x6b5b45 });
-      [[0, -ARENA / 2, 0], [0, ARENA / 2, Math.PI], [-ARENA / 2, 0, Math.PI / 2], [ARENA / 2, 0, -Math.PI / 2]].forEach((w) => {
-        const m = new THREE.Mesh(new THREE.BoxGeometry(ARENA, 4, .8), wallMat);
-        m.position.set(w[0], 2, w[1]); m.rotation.y = w[2]; scene.add(m);
+      const wallMat = new THREE.MeshLambertMaterial({ color: 0xa08a63 });
+      const solids = [];
+      const addBox = (w, h, d, x, z, mat) => {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat || wallMat);
+        m.position.set(x, h / 2, z); scene.add(m);
+        solids.push({ x: x, z: z, hw: w / 2 + .35, hd: d / 2 + .35, h: h });
+        return m;
+      };
+      addBox(ARENA, 5, 1, 0, -ARENA / 2); addBox(ARENA, 5, 1, 0, ARENA / 2);
+      addBox(1, 5, ARENA, -ARENA / 2, 0); addBox(1, 5, ARENA, ARENA / 2, 0);
+      const crateMat = new THREE.MeshLambertMaterial({ color: 0x8a6a3d });
+      const crateMat2 = new THREE.MeshLambertMaterial({ color: 0x6f5530 });
+      [[-7, -7, 2], [7, -7, 2], [-7, 7, 2], [7, 7, 2], [0, -11, 1.6], [0, 11, 1.6], [-11, 0, 1.6], [11, 0, 1.6], [-3.5, -3.5, 1.4], [3.5, 3.5, 1.4], [3.5, -3.5, 1.4], [-3.5, 3.5, 1.4], [0, 0, 2.2]].forEach((c, i) => {
+        addBox(c[2], c[2] > 2 ? 2.4 : 1.5, c[2], c[0], c[1], i % 2 ? crateMat : crateMat2);
       });
-      const crates = [];
-      const crateMat = new THREE.MeshLambertMaterial({ color: 0x7a5a33 });
-      const cratePos = [[-6, -6], [6, -6], [-6, 6], [6, 6], [0, -9], [0, 9], [-9, 0], [9, 0], [-3, 0], [3, 0]];
-      cratePos.forEach((c) => {
-        const h = 1.2 + Math.random() * .9;
-        const m = new THREE.Mesh(new THREE.BoxGeometry(1.6, h, 1.6), crateMat);
-        m.position.set(c[0], h / 2, c[1]); scene.add(m);
-        crates.push({ x: c[0], z: c[1], hw: 1.1 });
-      });
+      addBox(8, 2.6, .8, -6, 3.5); addBox(.8, 2.6, 8, 6, -3.5);
 
-      // оружейная моделька
-      const gun = new THREE.Group();
-      const gbody = new THREE.Mesh(new THREE.BoxGeometry(.09, .13, .62), new THREE.MeshLambertMaterial({ color: 0x23272e }));
-      const gbar = new THREE.Mesh(new THREE.CylinderGeometry(.028, .032, .5, 10), new THREE.MeshLambertMaterial({ color: 0x181b20 }));
-      gbar.rotation.x = Math.PI / 2; gbar.position.set(0, .03, -.5);
-      const gmag = new THREE.Mesh(new THREE.BoxGeometry(.07, .2, .12), new THREE.MeshLambertMaterial({ color: 0x2c3138 }));
-      gmag.position.set(0, -.14, -.08); gmag.rotation.x = .3;
-      gun.add(gbody, gbar, gmag);
-      gun.position.set(.28, -.24, -.55);
-      camera.add(gun);
-      scene.add(camera);
-      const flash = new THREE.PointLight(0xffc36a, 0, 6);
-      flash.position.set(.28, -.1, -1.1);
-      camera.add(flash);
+      /* ---------- оружейная моделька ---------- */
+      const gunG = new THREE.Group();
+      const gbody = new THREE.Mesh(new THREE.BoxGeometry(.09, .14, .66), new THREE.MeshLambertMaterial({ color: 0x23272e }));
+      const gbar = new THREE.Mesh(new THREE.CylinderGeometry(.026, .03, .55, 10), new THREE.MeshLambertMaterial({ color: 0x181b20 }));
+      gbar.rotation.x = Math.PI / 2; gbar.position.set(0, .035, -.55);
+      const gmag = new THREE.Mesh(new THREE.BoxGeometry(.07, .22, .13), new THREE.MeshLambertMaterial({ color: 0x2c3138 }));
+      gmag.position.set(0, -.15, -.1); gmag.rotation.x = .32;
+      const gscope = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .22, 10), new THREE.MeshLambertMaterial({ color: 0x111418 }));
+      gscope.rotation.x = Math.PI / 2; gscope.position.set(0, .12, -.2); gscope.visible = false;
+      gunG.add(gbody, gbar, gmag, gscope);
+      gunG.position.set(.3, -.26, -.6);
+      camera.add(gunG); scene.add(camera);
+      const flash = new THREE.PointLight(0xffc36a, 0, 7); flash.position.set(.3, -.1, -1.3); camera.add(flash);
 
-      // враги
+      /* ---------- враги ---------- */
       let enemies = [];
       function makeEnemy(x, z) {
         const g = new THREE.Group();
-        const torso = new THREE.Mesh(new THREE.BoxGeometry(.62, .95, .34), new THREE.MeshLambertMaterial({ color: 0x7a3b2e }));
-        torso.position.y = 1.05;
+        const torso = new THREE.Mesh(new THREE.BoxGeometry(.64, .95, .36), new THREE.MeshLambertMaterial({ color: 0x8a4b32 }));
+        torso.position.y = 1.08;
+        const vest = new THREE.Mesh(new THREE.BoxGeometry(.68, .5, .4), new THREE.MeshLambertMaterial({ color: 0x37414f }));
+        vest.position.y = 1.15;
         const head = new THREE.Mesh(new THREE.SphereGeometry(.24, 14, 14), new THREE.MeshLambertMaterial({ color: 0xd9b48f }));
-        head.position.y = 1.75;
-        const legs = new THREE.Mesh(new THREE.BoxGeometry(.5, .75, .3), new THREE.MeshLambertMaterial({ color: 0x2f3640 }));
-        legs.position.y = .38;
-        const rifle = new THREE.Mesh(new THREE.BoxGeometry(.08, .1, .7), new THREE.MeshLambertMaterial({ color: 0x14171c }));
-        rifle.position.set(.2, 1.15, .3);
-        g.add(torso, head, legs, rifle);
+        head.position.y = 1.78;
+        const legs = new THREE.Mesh(new THREE.BoxGeometry(.52, .78, .32), new THREE.MeshLambertMaterial({ color: 0x2f3640 }));
+        legs.position.y = .39;
+        const rifle = new THREE.Mesh(new THREE.BoxGeometry(.08, .1, .75), new THREE.MeshLambertMaterial({ color: 0x14171c }));
+        rifle.position.set(.22, 1.18, .34);
+        g.add(torso, vest, head, legs, rifle);
         g.position.set(x, 0, z);
-        [torso, head, legs].forEach((m) => { m.userData.enemy = g; m.userData.part = m === head ? 'head' : 'body'; });
-        g.userData = { hp: 100, cd: 1 + Math.random() * 1.5, parts: [torso, head, legs], alive: true };
-        scene.add(g);
-        enemies.push(g);
+        [torso, vest, head, legs].forEach((m) => { m.userData.enemy = g; m.userData.part = m === head ? 'head' : 'body'; });
+        g.userData = { hp: 100, alive: true, cd: 1 + Math.random(), burst: 0, burstT: 0, state: 'patrol', wander: new THREE.Vector2(OS.rnd(-12, 12), OS.rnd(-12, 12)), parts: [torso, vest, head, legs], strafe: Math.random() < .5 ? 1 : -1 };
+        scene.add(g); enemies.push(g);
       }
       function spawnRound() {
-        enemies.forEach((g) => scene.remove(g));
-        enemies = [];
-        const n = Math.min(8, 1 + st.round);
+        enemies.forEach((g) => scene.remove(g)); enemies = [];
+        const n = Math.min(6, 1 + M.round);
         for (let i = 0; i < n; i++) {
-          const a = (i / n) * Math.PI * 2 + Math.random() * .6;
-          makeEnemy(Math.cos(a) * 10, Math.sin(a) * 10);
+          const a = (i / n) * Math.PI * 2 + OS.rnd(-.4, .4);
+          makeEnemy(Math.cos(a) * 13, Math.sin(a) * 13);
         }
-        rEl.textContent = st.round;
       }
 
-      // игрок
-      const P = { x: 0, z: 0, yaw: 0, pitch: 0 };
-      const keys = {};
-      let locked = false, drag = false, lx = 0, ly = 0;
-      const cv = renderer.domElement;
-      cv.addEventListener('click', () => { if (!st.over && cv.requestPointerLock) cv.requestPointerLock(); });
-      document.addEventListener('pointerlockchange', () => {
-        locked = document.pointerLockElement === cv;
-        msg.classList.toggle('hidden', locked || st.over);
-      });
-      document.addEventListener('mousemove', (e) => {
-        if (!locked || st.over) return;
-        P.yaw -= e.movementX * .0022;
-        P.pitch = OS.clamp(P.pitch - e.movementY * .0022, -1.2, 1.2);
-      });
-      cv.addEventListener('pointerdown', (e) => { if (!locked) { drag = true; lx = e.clientX; ly = e.clientY; } else if (e.button === 0) shoot(); });
-      cv.addEventListener('pointermove', (e) => {
-        if (!drag || locked) return;
-        P.yaw -= (e.clientX - lx) * .004; P.pitch = OS.clamp(P.pitch - (e.clientY - ly) * .003, -1.2, 1.2);
-        lx = e.clientX; ly = e.clientY;
-      });
-      addEventListener('pointerup', () => { drag = false; });
+      /* ---------- HUD ---------- */
+      function hud() {
+        hudHp.textContent = Math.max(0, Math.round(M.hp));
+        hudHpBar.style.width = Math.max(0, M.hp) + '%';
+        hudHpBar.style.background = M.hp > 50 ? 'linear-gradient(90deg,#22c55e,#84cc16)' : M.hp > 25 ? '#f59e0b' : '#ef4444';
+        hudMoney.textContent = '$' + M.money;
+        hudGun.textContent = WEAPONS[gun].name + (scoped ? ' (скоуп)' : '');
+        hudAmmo.textContent = mag[gun] + '/' + res[gun];
+        hudTime.textContent = Math.floor(M.time / 60) + ':' + OS.pad(Math.floor(M.time % 60));
+        hudRound.textContent = 'Раунд ' + M.round;
+        hudSp.textContent = M.sp; hudSe.textContent = M.se;
+        cross.style.opacity = scoped ? '0' : '1';
+        const gap = 4 + spreadNow * 260;
+        cross.style.setProperty('--gap', gap + 'px');
+        win.data.state = M;
+      }
+      function feedKill(killer, victim, head) {
+        const d = OS.el('div', { class: 'cs-fk' });
+        d.innerHTML = '<b>' + OS.esc(killer) + '</b> ' + (head ? '✸ ' : '› ') + '<i>' + OS.esc(victim) + '</i>';
+        feed.append(d);
+        setTimeout(() => d.remove(), 4200);
+      }
 
+      /* ---------- закупка ---------- */
+      const SPAWN = { x: 0, z: 13 };
+      function canBuy() { return M.alive && roundState === 'live' && (M.time > 82 || Math.hypot(P.x - SPAWN.x, P.z - SPAWN.z) < 5); }
+      function renderBuy() {
+        const items = Object.keys(WEAPONS).map((id) => {
+          const w = WEAPONS[id];
+          const has = owned.includes(id);
+          return '<button class="cs-bi' + (has ? ' owned' : '') + '" data-w="' + id + '"' + (has || M.money < w.price ? ' disabled' : '') + '>' +
+            '<span>' + w.name + '</span><b>' + (has ? 'куплено' : '$' + w.price) + '</b></button>';
+        }).join('') +
+          '<button class="cs-bi" data-w="kevlar"' + (M.armor >= 100 || M.money < 650 ? ' disabled' : '') + '><span>Бронежилет</span><b>$650</b></button>';
+        buyEl.innerHTML = '<div class="cs-buy-panel"><div class="cs-buy-h"><b>Закупка · $' + M.money + '</b><button class="btn btn-sm" data-close>B — закрыть</button></div>' +
+          '<div class="cs-buy-g">' + items + '</div></div>';
+      }
+      function toggleBuy(force) {
+        const show = force != null ? force : buyEl.classList.contains('hidden');
+        if (show && !canBuy()) { OS.toast('Закупка закрыта', 'Покупать можно в начале раунда или в зоне респауна', { icon: 'x', timeout: 2600 }); return; }
+        buyEl.classList.toggle('hidden', !show);
+        if (show) renderBuy();
+      }
+      buyEl.addEventListener('click', (e) => {
+        if (e.target.closest('[data-close]')) { toggleBuy(false); return; }
+        const b = e.target.closest('[data-w]'); if (!b || b.disabled) return;
+        const id = b.dataset.w;
+        if (id === 'kevlar') {
+          if (M.money < 650) return;
+          M.money -= 650; M.armor = 100;
+          OS.sfx.play('ok'); OS.toast('Бронежилет', 'Входящий урон снижен наполовину', { icon: 'shield', timeout: 2200 });
+        } else {
+          const w = WEAPONS[id];
+          if (M.money < w.price || owned.includes(id)) return;
+          M.money -= w.price; owned.push(id); mag[id] = w.mag; res[id] = w.res; gun = id;
+          OS.sfx.play('ok');
+        }
+        renderBuy(); hud();
+      });
+
+      /* ---------- стрельба ---------- */
       const ray = new THREE.Raycaster();
       let tracers = [];
       function shoot() {
-        if (st.over || st.reloading) return;
-        if (st.ammo <= 0) { OS.sfx.play('error'); msg.classList.remove('hidden'); msg.textContent = 'Перезарядка — R'; setTimeout(() => { if (!locked) msg.textContent = 'Кликните, чтобы захватить мышь'; }, 900); return; }
-        st.ammo--; hud();
+        if (!M.alive || roundState !== 'live' || reloading || !buyEl.classList.contains('hidden')) return;
+        const w = WEAPONS[gun];
+        const now = performance.now();
+        if (now - lastShot < 60000 / w.rpm) return;
+        if (mag[gun] <= 0) { OS.sfx.play('error'); reload(); return; }
+        lastShot = now;
+        mag[gun]--; hud();
         OS.sfx.play('shot');
-        flash.intensity = 2.4; setTimeout(() => { flash.intensity = 0; }, 55);
-        gun.position.z = -.47; setTimeout(() => { gun.position.z = -.55; }, 60);
-        ray.setFromCamera({ x: 0, y: 0 }, camera);
+        flash.intensity = 2.6; setTimeout(() => { flash.intensity = 0; }, 50);
+        gunG.position.z = -.5; setTimeout(() => { gunG.position.z = -.6; }, 70);
+        recoil += w.rec * (scoped ? .5 : 1);
+        spreadNow = Math.min(.14, spreadNow + w.spread * .8 + (moving ? .02 : 0) + (airborne ? .05 : 0));
+        const dir = new THREE.Vector3(
+          (Math.random() - .5) * spreadNow, (Math.random() - .5) * spreadNow + recoil * .6, -1
+        ).normalize().applyQuaternion(camera.quaternion);
+        ray.set(camera.position, dir);
         const parts = [];
         enemies.forEach((g) => { if (g.userData.alive) g.userData.parts.forEach((m) => parts.push(m)); });
         const hit = ray.intersectObjects(parts, false)[0];
-        const from = new THREE.Vector3(); gun.getWorldPosition(from);
-        const to = hit ? hit.point : ray.ray.at(60, new THREE.Vector3());
-        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([from, to]), new THREE.LineBasicMaterial({ color: 0xffd789, transparent: true, opacity: .85 }));
+        const from = new THREE.Vector3(); gunG.getWorldPosition(from);
+        const to = hit ? hit.point : ray.ray.at(80, new THREE.Vector3());
+        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([from, to]), new THREE.LineBasicMaterial({ color: 0xffe0a3, transparent: true, opacity: .8 }));
         scene.add(line); tracers.push({ line: line, t: 0 });
         if (hit) {
           const g = hit.object.userData.enemy;
-          const dmg = hit.object.userData.part === 'head' ? 100 : 34;
+          const head = hit.object.userData.part === 'head';
+          const dmg = head ? w.dmg * w.hs : w.dmg;
           g.userData.hp -= dmg;
           OS.sfx.play('hit');
-          g.userData.parts.forEach((m) => { m.material.emissive && m.material.emissive.setHex(0x551111); setTimeout(() => m.material.emissive && m.material.emissive.setHex(0x000000), 90); });
-          if (g.userData.hp <= 0) {
+          g.userData.parts.forEach((m) => { m.material.emissive.setHex(head ? 0x662222 : 0x441111); setTimeout(() => m.material.emissive.setHex(0x000000), 80); });
+          if (g.userData.hp <= 0 && g.userData.alive) {
             g.userData.alive = false;
-            st.kills++; kEl.textContent = st.kills;
-            OS.coins.add(0); // монеты начисляются в конце матча
+            M.kills++;
+            const reward = gun === 'awp' ? 100 : 300;
+            M.money += reward;
+            feedKill('вы', 'Terrorist #' + (enemies.indexOf(g) + 1), head);
             g.rotation.x = -Math.PI / 2; g.position.y = .3;
-            setTimeout(() => scene.remove(g), 2400);
-            enemies = enemies.filter((x) => x !== g);
-            if (!enemies.some((e2) => e2.userData.alive)) {
-              st.round++; st.hp = Math.min(100, st.hp + 25);
-              OS.toast('Раунд ' + st.round, 'Противники уничтожены. +25 HP', { icon: 'cross', timeout: 2600 });
-              spawnRound();
-            }
+            setTimeout(() => scene.remove(g), 2600);
+            if (!enemies.some((e2) => e2.userData.alive)) winRound();
           }
         }
+        hud();
       }
       function reload() {
-        if (st.reloading || st.ammo === 30 || st.reserve <= 0) return;
-        st.reloading = true; OS.sfx.play('reload');
+        if (reloading || mag[gun] === WEAPONS[gun].mag || res[gun] <= 0) return;
+        reloading = true; OS.sfx.play('reload');
         msg.classList.remove('hidden'); msg.textContent = 'Перезарядка…';
         setTimeout(() => {
-          const need = 30 - st.ammo, take = Math.min(need, st.reserve);
-          st.ammo += take; st.reserve -= take; st.reloading = false;
-          hud();
-          if (!locked) msg.textContent = 'Кликните, чтобы захватить мышь'; else msg.classList.add('hidden');
-        }, 1100);
+          const need = WEAPONS[gun].mag - mag[gun], take = Math.min(need, res[gun]);
+          mag[gun] += take; res[gun] -= take; reloading = false; hud();
+          if (locked) msg.classList.add('hidden'); else msg.textContent = 'Клик — захват мыши · B — закупка';
+        }, WEAPONS[gun].rl * 1000);
       }
-      function hud() {
-        aEl.textContent = st.ammo + '/' + st.reserve;
-        hpEl.textContent = Math.max(0, Math.round(st.hp));
-        hpBar.style.width = Math.max(0, st.hp) + '%';
-        hpBar.style.background = st.hp > 50 ? 'linear-gradient(90deg,#22c55e,#84cc16)' : st.hp > 25 ? '#f59e0b' : '#ef4444';
-        win.data.state = st;
+
+      /* ---------- раунды ---------- */
+      function winRound() {
+        roundState = 'end';
+        M.sp++; M.money += 3250; M.loss = 0;
+        showOver('Раунд за вами', 'Противники уничтожены. Призовые +$3250', M.sp >= 8);
       }
-      function gameOver() {
-        st.over = true;
-        const coins = st.kills * 2;
-        OS.coins.add(coins);
-        const rec = best('cs', st.kills);
-        OS.sfx.play('error');
+      function loseRound(why) {
+        roundState = 'end';
+        M.se++;
+        const bonus = Math.min(3400, 1400 + M.loss * 500);
+        M.loss++;
+        M.money += bonus;
+        showOver('Раунд потерян', why + ' Серийный бонус +$' + bonus, M.se >= 8);
+      }
+      function showOver(title, text, matchEnd) {
+        if (matchEnd) {
+          M.matchOver = true;
+          const winM = M.sp > M.se;
+          const coins = M.kills * 2 + M.sp * 5;
+          OS.coins.add(coins);
+          const rec = best('cs', M.kills);
+          overEl.classList.remove('hidden');
+          overEl.innerHTML = '<div><h3>' + (winM ? 'Матч выигран! 🏆' : 'Матч проигран') + '</h3>' +
+            '<p>Счёт ' + M.sp + ':' + M.se + ' · фраги ' + M.kills + ' · смерти ' + M.deaths + '</p>' +
+            '<p class="dim">Рекорд фрагов: ' + rec + ' · +' + coins + ' монет</p>' +
+            '<button class="btn btn-accent" data-restart>Новый матч</button></div>';
+          overEl.querySelector('[data-restart]').onclick = () => {
+            Object.assign(M, { money: 800, hp: 100, armor: 0, round: 1, sp: 0, se: 0, loss: 0, time: 90, alive: true, matchOver: false, kills: 0, deaths: 0 });
+            owned = ['glock']; gun = 'glock'; mag = {}; res = {}; resetAmmo(); scoped = false; camera.fov = 75; camera.updateProjectionMatrix(); scopeEl.classList.add('hidden'); gunG.visible = true;
+            overEl.classList.add('hidden'); nextRound(true);
+          };
+          if (document.pointerLockElement) document.exitPointerLock();
+          return;
+        }
         overEl.classList.remove('hidden');
-        overEl.innerHTML = '<div><h3>Матч окончен</h3><p>Фраги: <b>' + st.kills + '</b> · раунд ' + st.round + '</p><p class="dim">Рекорд: ' + rec + ' · +' + coins + ' монет</p><button class="btn btn-accent" id="cs-again">В бой</button></div>';
-        overEl.querySelector('#cs-again').onclick = () => { st.hp = 100; st.ammo = 30; st.reserve = 90; st.round = 1; st.kills = 0; st.over = false; P.x = 0; P.z = 0; P.yaw = 0; P.pitch = 0; overEl.classList.add('hidden'); spawnRound(); hud(); };
-        if (document.pointerLockElement) document.exitPointerLock();
+        overEl.innerHTML = '<div><h3>' + title + '</h3><p class="dim">' + text + '</p><p>Следующий раунд через несколько секунд…</p></div>';
+        setTimeout(() => { overEl.classList.add('hidden'); nextRound(false); }, 3200);
       }
-      const overEl = OS.el('div', { class: 'gm-over hidden' });
-      stage.append(overEl);
+      function nextRound(first) {
+        if (!first) M.round++;
+        M.time = 90; M.hp = 100; M.alive = true; roundState = 'live';
+        P.x = SPAWN.x; P.z = SPAWN.z; P.y = 1.62; vy = 0; P.yaw = Math.PI; P.pitch = 0;
+        resetAmmo();
+        spawnRound();
+        hud();
+        OS.toast('Раунд ' + M.round, 'Закупка: B в зоне респауна или первые 8 секунд', { icon: 'cross', timeout: 3200 });
+      }
+
+      /* ---------- игрок ---------- */
+      const P = { x: SPAWN.x, z: SPAWN.z, y: 1.62, yaw: Math.PI, pitch: 0 };
+      let vy = 0, airborne = false, moving = false;
+      const keys = {};
+      let locked = false, drag = false, lx = 0, ly = 0;
+      const cv = renderer.domElement;
+      cv.addEventListener('click', () => { if (!M.matchOver && buyEl.classList.contains('hidden')) cv.requestPointerLock && cv.requestPointerLock(); });
+      document.addEventListener('pointerlockchange', () => {
+        locked = document.pointerLockElement === cv;
+        msg.classList.toggle('hidden', locked || M.matchOver);
+        if (!locked) firing = false;
+      });
+      document.addEventListener('mousemove', (e) => {
+        if (!locked || !M.alive) return;
+        P.yaw -= e.movementX * .0021;
+        P.pitch = OS.clamp(P.pitch - e.movementY * .0021, -1.25, 1.25);
+      });
+      cv.addEventListener('pointerdown', (e) => {
+        if (!locked) { drag = true; lx = e.clientX; ly = e.clientY; return; }
+        if (e.button === 0) { firing = true; if (!WEAPONS[gun].auto) shoot(); }
+        if (e.button === 2 && gun === 'awp') { scoped = !scoped; camera.fov = scoped ? 26 : 75; camera.updateProjectionMatrix(); gscope.visible = scoped; scopeEl.classList.toggle('hidden', !scoped); gunG.visible = !scoped; OS.sfx.play('click'); hud(); }
+      });
+      cv.addEventListener('pointermove', (e) => {
+        if (!drag || locked) return;
+        P.yaw -= (e.clientX - lx) * .004; P.pitch = OS.clamp(P.pitch - (e.clientY - ly) * .003, -1.25, 1.25);
+        lx = e.clientX; ly = e.clientY;
+      });
+      addEventListener('pointerup', () => { drag = false; });
 
       const onKey = (e) => {
         if (!win.root.isConnected || OS.wm.active !== win) return;
         const k = e.key.toLowerCase();
         const v = e.type === 'keydown';
-        if (v && k === 'r') return reload();
+        if (v && !e.repeat) {
+          if (k === 'r') reload();
+          if (k === 'b' || k === 'и') toggleBuy();
+          if (k === ' ') { if (!airborne && M.alive) { vy = 4.6; airborne = true; } e.preventDefault(); }
+          if (/^[1-5]$/.test(k)) { const id = owned[+k - 1]; if (id) { gun = id; scoped = false; camera.fov = 75; camera.updateProjectionMatrix(); scopeEl.classList.add('hidden'); gunG.visible = true; OS.sfx.play('click'); hud(); } }
+        }
         if (k === 'w' || k === 'ц') keys.up = v;
         if (k === 's' || k === 'ы') keys.down = v;
         if (k === 'a' || k === 'ф') keys.left = v;
         if (k === 'd' || k === 'в') keys.right = v;
+        if (k === 'shift') keys.walk = v;
       };
       document.addEventListener('keydown', onKey);
       document.addEventListener('keyup', onKey);
-      win.body.querySelector('#cs-reload').onclick = reload;
-      win.body.querySelector('#cs-rst').onclick = () => { st.hp = 100; st.ammo = 30; st.reserve = 90; st.round = 1; st.kills = 0; st.over = false; overEl.classList.add('hidden'); spawnRound(); hud(); };
 
-      const stop = KIT.loop(win, (dt) => {
-        if (!st.over) {
-          const sp = 4.2 * dt / 1000;
-          const fx0 = -Math.sin(P.yaw), fz0 = -Math.cos(P.yaw);
-          const rx0 = Math.cos(P.yaw), rz0 = -Math.sin(P.yaw);
-          let fx = 0, fz = 0;
-          if (keys.up) { fx += fx0; fz += fz0; }
-          if (keys.down) { fx -= fx0; fz -= fz0; }
-          if (keys.right) { fx += rx0; fz += rz0; }
-          if (keys.left) { fx -= rx0; fz -= rz0; }
-          const len = Math.hypot(fx, fz);
-          if (len) {
-            fx = fx / len * sp; fz = fz / len * sp;
-            let nx = OS.clamp(P.x + fx, -ARENA / 2 + 1, ARENA / 2 - 1);
-            let nz = OS.clamp(P.z + fz, -ARENA / 2 + 1, ARENA / 2 - 1);
-            const hitC = (x, z) => crates.some((c) => Math.abs(x - c.x) < c.hw && Math.abs(z - c.z) < c.hw);
-            if (!hitC(nx, P.z)) P.x = nx;
-            if (!hitC(P.x, nz)) P.z = nz;
+      /* ---------- ИИ ---------- */
+      function enemyUpdate(g, dt) {
+        const u = g.userData;
+        if (!u.alive) return;
+        const dx = P.x - g.position.x, dz = P.z - g.position.z;
+        const dist = Math.hypot(dx, dz);
+        g.rotation.y = Math.atan2(dx, dz);
+        if (dist < 20 && M.alive) u.state = 'chase';
+        if (u.state === 'chase' && M.alive) {
+          const sp = 2.1 * dt / 1000;
+          if (dist > 8) { g.position.x += dx / dist * sp; g.position.z += dz / dist * sp; }
+          else if (dist < 4.5) { g.position.x -= dx / dist * sp * .7; g.position.z -= dz / dist * sp * .7; }
+          else {
+            const sx = -dz / dist, sz = dx / dist;
+            g.position.x += sx * sp * .5 * u.strafe; g.position.z += sz * sp * .5 * u.strafe;
+            if (Math.random() < .005) u.strafe *= -1;
           }
-          camera.position.set(P.x, 1.62, P.z);
-          camera.rotation.y = P.yaw;
-          camera.rotation.x = P.pitch;
-          // ИИ противников
-          enemies.forEach((g) => {
-            if (!g.userData.alive) return;
-            const dx = P.x - g.position.x, dz = P.z - g.position.z;
-            const dist = Math.hypot(dx, dz);
-            g.rotation.y = Math.atan2(dx, dz);
-            if (dist > 5.5) {
-              const s2 = 1.7 * dt / 1000;
-              g.position.x += dx / dist * s2;
-              g.position.z += dz / dist * s2;
-            }
-            g.userData.cd -= dt / 1000;
-            if (g.userData.cd <= 0 && dist < 13) {
-              g.userData.cd = 1.15 + Math.random() * .9;
+          u.cd -= dt / 1000;
+          if (u.cd <= 0 && dist < 17) { u.burst = 3 + OS.rndi(0, 2); u.burstT = 0; u.cd = 1.1 + Math.random() * 1.1; }
+          if (u.burst > 0) {
+            u.burstT -= dt / 1000;
+            if (u.burstT <= 0) {
+              u.burstT = .11; u.burst--;
               OS.sfx.play('shot');
-              if (Math.random() < .42) {
-                st.hp -= 6 + Math.random() * 7;
+              const acc = OS.clamp(.46 - dist * .018 - (moving ? .14 : 0) - (airborne ? .2 : 0), .06, .5);
+              if (Math.random() < acc && M.alive) {
+                let dmg = 7 + Math.random() * 8;
+                if (M.armor > 0) { const abs = dmg * .5; M.armor = Math.max(0, M.armor - abs); dmg -= abs * .8; }
+                M.hp -= dmg;
+                stage.classList.add('cs-hurt'); setTimeout(() => stage.classList.remove('cs-hurt'), 130);
                 hud();
-                stage.classList.add('cs-hurt');
-                setTimeout(() => stage.classList.remove('cs-hurt'), 140);
-                if (st.hp <= 0) gameOver();
+                if (M.hp <= 0 && M.alive) {
+                  M.alive = false; M.deaths++;
+                  feedKill('Terrorist #' + (enemies.indexOf(g) + 1), 'вы', false);
+                  if (document.pointerLockElement) document.exitPointerLock();
+                  loseRound('Вы погибли.');
+                }
               }
             }
-          });
+          }
+        } else {
+          const wx = u.wander.x - g.position.x, wz = u.wander.y - g.position.z;
+          const wd = Math.hypot(wx, wz);
+          if (wd < 1) u.wander.set(OS.rnd(-13, 13), OS.rnd(-13, 13));
+          else { const sp = 1.2 * dt / 1000; g.position.x += wx / wd * sp; g.position.z += wz / wd * sp; }
+        }
+        g.position.x = OS.clamp(g.position.x, -ARENA / 2 + 1, ARENA / 2 - 1);
+        g.position.z = OS.clamp(g.position.z, -ARENA / 2 + 1, ARENA / 2 - 1);
+      }
+
+      /* ---------- цикл ---------- */
+      let secAcc = 0;
+      const stop = KIT.loop(win, (dt) => {
+        if (!M.matchOver) {
+          secAcc += dt;
+          if (secAcc > 1000) {
+            secAcc = 0;
+            if (roundState === 'live' && M.alive) {
+              M.time--;
+              hud();
+              if (M.time <= 0) loseRound('Время раунда вышло.');
+            }
+          }
+          if (M.alive) {
+            const walk = keys.walk ? 1.7 : 4.3;
+            const sp = walk * dt / 1000;
+            const fx0 = -Math.sin(P.yaw), fz0 = -Math.cos(P.yaw);
+            const rx0 = Math.cos(P.yaw), rz0 = -Math.sin(P.yaw);
+            let fx = 0, fz = 0;
+            if (keys.up) { fx += fx0; fz += fz0; }
+            if (keys.down) { fx -= fx0; fz -= fz0; }
+            if (keys.left) { fx -= rx0; fz -= rz0; }
+            if (keys.right) { fx += rx0; fz += rz0; }
+            const len = Math.hypot(fx, fz);
+            moving = len > 0;
+            if (len) {
+              fx = fx / len * sp; fz = fz / len * sp;
+              let nx = OS.clamp(P.x + fx, -ARENA / 2 + 1, ARENA / 2 - 1);
+              let nz = OS.clamp(P.z + fz, -ARENA / 2 + 1, ARENA / 2 - 1);
+              const hitC = (x, z) => solids.some((c) => c.h > 1.2 && Math.abs(x - c.x) < c.hw && Math.abs(z - c.z) < c.hd);
+              if (!hitC(nx, P.z)) P.x = nx;
+              if (!hitC(P.x, nz)) P.z = nz;
+            }
+            vy -= 9.8 * dt / 1000;
+            P.y = Math.max(1.62, P.y + vy * dt / 1000);
+            if (P.y <= 1.62) { vy = 0; airborne = false; }
+            spreadNow = Math.max(WEAPONS[gun].spread * (scoped ? .35 : 1) + (moving ? WEAPONS[gun].spread * WEAPONS[gun].mov : 0), spreadNow - dt * .0004);
+            recoil = Math.max(0, recoil - dt * .00012);
+            if (firing && WEAPONS[gun].auto) shoot();
+            camera.position.set(P.x, P.y, P.z);
+            camera.rotation.y = P.yaw;
+            camera.rotation.x = P.pitch + recoil;
+          }
+          enemies.forEach((g) => enemyUpdate(g, dt));
         }
         tracers = tracers.filter((t) => {
           t.t += dt;
-          t.line.material.opacity = Math.max(0, .85 - t.t / 90);
-          if (t.t > 90) { scene.remove(t.line); return false; }
+          t.line.material.opacity = Math.max(0, .8 - t.t / 80);
+          if (t.t > 80) { scene.remove(t.line); return false; }
           return true;
         });
         renderer.render(scene, camera);
@@ -1431,7 +1612,8 @@ width: 860, height: 620, minWidth: 400, minHeight: 360,
       const onRs = () => KIT.fit(renderer, stage, camera);
       win.root.addEventListener('wm:resize', onRs);
       addEventListener('resize', OS.debounce(onRs, 150));
-      onRs(); spawnRound(); hud();
+      onRs(); nextRound(true);
+      win.data.api = { get M() { return M; }, toggleBuy: toggleBuy, get gun() { return gun; }, get owned() { return owned; } };
       return () => { stop(); document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); removeEventListener('resize', onRs); renderer.dispose(); };
     }
   });

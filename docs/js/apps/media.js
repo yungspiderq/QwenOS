@@ -896,7 +896,11 @@ width: 700, height: 460, minWidth: 320, minHeight: 240,
   });
 
   /* =======================================================================
-     ANIMIX — приложение для просмотра аниме (контент скоро)
+     ANIMIX — приложение для просмотра аниме.
+     Серия 1 собственного оригинального сериала «Qwen Chronicles»:
+     «Сигнал на рассвете». Рисованный движок на canvas: сцены, параллакс,
+     спидлайны, субтитры, синтезированный саундтрек и клиффхэнгер.
+     (Весь контент оригинальный, не экранизация чужих произведений.)
      ======================================================================= */
   OS.Apps.register({
     id: 'animix',
@@ -906,30 +910,322 @@ width: 700, height: 460, minWidth: 320, minHeight: 240,
     category: 'Мультимедиа',
     storeOnly: true,
     desktop: false,
-    keywords: 'аниме anime animix анимикс смотреть плеер',
-    width: 860, height: 560, minWidth: 420, minHeight: 340,
+    keywords: 'аниме anime animix анимикс смотреть плеер сериал',
+    width: 980, height: 680, minWidth: 480, minHeight: 400,
     mount(win, api) {
+      /* ------------------------------------------------ сценарий серии */
+      const EP = {
+        series: 'Qwen Chronicles',
+        title: 'Серия 1 — «Сигнал на рассвете»',
+        scenes: [
+          { d: 7, bg: 'night', sub: 'Ночной Квен-Сити. Город, где сеть дышит вместе с людьми.', cam: { z: 1.05, pan: .12 }, chars: [] },
+          { d: 6, bg: 'night', sub: 'Курьер Рин знает каждый его провод наизусть.', cam: { z: 1.2, pan: -.1 }, chars: [{ id: 'rin', x: .62, s: 1.15, pose: 'stand' }] },
+          { d: 6, bg: 'night', fx: ['speed'], sub: 'Сегодня у неё один заказ. Без адреса. Без имени получателя.', cam: { z: 1.35, pan: .2 }, chars: [{ id: 'rin', x: .5, s: 1.3, pose: 'run' }] },
+          { d: 5, bg: 'night', fx: ['flash'], sub: 'Посылка вспыхивает прямо в руках.', cam: { z: 1.6, shake: 6 }, chars: [{ id: 'rin', x: .5, s: 1.4, pose: 'kneel' }, { id: 'core', x: .5, y: .62, s: .5 }] },
+          { d: 6, bg: 'night', sub: 'КАЙТ (бортовой ИИ): «Рин… это не груз. Это сигнал».', cam: { z: 1.25 }, chars: [{ id: 'kait', x: .3, y: .3, s: .8 }, { id: 'rin', x: .62, s: 1.2, pose: 'stand' }] },
+          { d: 6, bg: 'memory', fx: ['halftone'], sub: 'Голос из памяти: «Когда сеть заговорит — не бойся ответить».', cam: { z: 1.1, pan: -.15 }, chars: [{ id: 'child', x: .5, s: .9, pose: 'stand' }] },
+          { d: 6, bg: 'night', fx: ['speed'], sub: 'По всему городу гаснут экраны. Потом — загораются одним лицом.', cam: { z: 1.4, shake: 3 }, chars: [{ id: 'collector', x: .5, s: 1.7, pose: 'stand' }] },
+          { d: 6, bg: 'night', sub: 'КОЛЛЕКТОР: «Отдай сигнал, курьер. Он не для таких, как ты».', cam: { z: 1.55 }, chars: [{ id: 'collector', x: .35, s: 1.5, pose: 'point' }, { id: 'rin', x: .68, s: 1.2, pose: 'stand' }] },
+          { d: 6, bg: 'bridge', fx: ['speed'], sub: 'Мост Разлома. Ветер рвёт неон на ленты.', cam: { z: 1.2, pan: .18 }, chars: [{ id: 'rin', x: .42, s: 1.25, pose: 'run' }, { id: 'kait', x: .58, y: .28, s: .6 }] },
+          { d: 5, bg: 'bridge', fx: ['flash', 'shake'], sub: 'Посылка раскрывается. Внутри — ядро рассветного света.', cam: { z: 1.7, shake: 8 }, chars: [{ id: 'core', x: .5, y: .5, s: 1.1 }] },
+          { d: 6, bg: 'bridge', fx: ['radial'], sub: 'Сеть входит в Рин. Или Рин — в сеть.', cam: { z: 1.9 }, chars: [{ id: 'rin', x: .5, s: 1.5, pose: 'stand', glow: true }] },
+          { d: 5, bg: 'bridge', sub: 'Глаза курьера светятся цветом компилятора.', cam: { z: 2.4 }, chars: [{ id: 'rin', x: .5, s: 1.9, pose: 'stand', glow: true, closeup: true }] },
+          { d: 6, bg: 'bridge', fx: ['speed'], sub: 'КОЛЛЕКТОР: «Хм… интересно. Мы ещё встретимся, курьер».', cam: { z: 1.3, pan: -.2 }, chars: [{ id: 'collector', x: .7, s: 1.3, pose: 'stand' }] },
+          { d: 7, bg: 'dawn', sub: 'Рассвет приходит раньше, чем его ждали.', cam: { z: 1.1, pan: .1 }, chars: [{ id: 'rin', x: .55, s: 1.2, pose: 'stand' }, { id: 'kait', x: .4, y: .3, s: .6 }] },
+          { d: 6, bg: 'dawn', sub: 'КАЙТ: «Сигнал выбрал носителя. Поздравляю, Рин».', cam: { z: 1.3 }, chars: [{ id: 'rin', x: .5, s: 1.35, pose: 'point', glow: true }] },
+          { d: 5, bg: 'title', fx: ['flash'], sub: '', cam: { z: 1 }, chars: [] },
+          { d: 7, bg: 'shadow', fx: ['halftone'], sub: 'В тени башни кто-то открывает досье: «РИН. СИНХРОН 97%».', cam: { z: 1.4 }, chars: [{ id: 'collector', x: .5, s: 1.6, pose: 'stand' }] },
+          { d: 5, bg: 'shadow', sub: 'Продолжение следует…', cam: { z: 1.6, shake: 2 }, chars: [] }
+        ]
+      };
+      EP.total = EP.scenes.reduce((s, x) => s + x.d, 0);
+
+      /* ------------------------------------------------ плеер */
       win.body.innerHTML =
         '<div class="anx">' +
-          '<div class="anx-hero">' +
-            '<div class="anx-logo">' + OS.svg('tv', 40) + '</div>' +
-            '<h1>Animix</h1>' +
-            '<p>Приложение для просмотра аниме в QwenOS.</p>' +
+          '<div class="anx-top">' +
+            '<div class="anx-logo-sm">' + OS.svg('tv', 18) + '</div>' +
+            '<div class="anx-title"><b>' + EP.series + '</b><span>' + EP.title + '</span></div>' +
+            '<div class="anx-eps"><button class="chip on">Серия 1</button><button class="chip" disabled>Серия 2 · в производстве</button><button class="chip" disabled>Серия 3 · в производстве</button></div>' +
           '</div>' +
-          '<div class="anx-empty">' +
-            OS.svg('film', 46) +
-            '<h3>Каталог скоро появится</h3>' +
-            '<p class="dim">Пока здесь пусто: плеер, тайтлы и расписание выхода серий находятся в производстве.<br>Загляните позже — приложение уже установлено и ждёт контент.</p>' +
-            '<div class="row" style="gap:8px;justify-content:center;margin-top:14px">' +
-              '<button class="btn btn-accent btn-sm" data-a="notify">Сообщить, когда появится</button>' +
-              '<button class="btn btn-sm" data-a="store">В QwenStore</button>' +
+          '<div class="anx-player">' +
+            '<canvas class="anx-cv"></canvas>' +
+            '<div class="anx-ctl">' +
+              '<button class="anx-play" data-a="play">' + OS.svg('play', 18) + '</button>' +
+              '<button class="anx-b" data-a="back10" title="-10 с">' + OS.svg('prev', 15) + '</button>' +
+              '<button class="anx-b" data-a="fwd10" title="+10 с">' + OS.svg('next', 15) + '</button>' +
+              '<div class="anx-bar"><i></i></div>' +
+              '<span class="anx-time">0:00 / 0:00</span>' +
+              '<button class="anx-b" data-a="restart" title="Заново">' + OS.svg('refresh', 15) + '</button>' +
             '</div>' +
           '</div>' +
-          '<div class="anx-foot">Animix · версия 0.1.0-preview · плеер и каталог будут добавлены позже</div>' +
+          '<div class="anx-desc">' +
+            '<h3>О серии</h3>' +
+            '<p>Оригинальный сериал QwenOS: курьер Рин получает посылку без адреса, внутри которой — живой сигнал городской сети. Антагонист Коллектор выходит на след. Серия нарисована и озвучена движком Animix прямо в браузере: параллакс-город, спидлайны, субтитры и синтезированный саундтрек.</p>' +
+            '<p class="dim">Весь контент оригинален и создан для QwenOS. Новые серии появятся в следующих сборках.</p>' +
+          '</div>' +
         '</div>';
-      win.body.querySelector('[data-a="notify"]').onclick = () => OS.toast('Animix', 'Спасибо! Сообщим уведомлением, когда загрузим первый тайтл', { icon: 'bell', timeout: 4200 });
-      win.body.querySelector('[data-a="store"]').onclick = () => api.open('store');
-      win.data.state = { empty: true };
+      const cv = win.body.querySelector('.anx-cv');
+      const ctx = cv.getContext('2d');
+      const bar = win.body.querySelector('.anx-bar i');
+      const barWrap = win.body.querySelector('.anx-bar');
+      const timeEl = win.body.querySelector('.anx-time');
+      const playBtn = win.body.querySelector('[data-a="play"]');
+      const st = { t: 0, playing: false, beat: 0 };
+
+      function sizeCv() {
+        const r = cv.getBoundingClientRect();
+        cv.width = Math.max(320, r.width) * Math.min(2, devicePixelRatio || 1);
+        cv.height = cv.width * 9 / 16;
+      }
+      sizeCv();
+
+      /* ------------------------------------------------ рисование */
+      const SKY = {
+        night: ['#05060f', '#141a3a', '#2a1a4a'],
+        memory: ['#2a1a10', '#4a2c18', '#7a4a24'],
+        bridge: ['#070a18', '#1a2246', '#3a2a5a'],
+        dawn: ['#1a1030', '#5a2a5a', '#e0705a'],
+        title: ['#0a0614', '#14081a', '#14081a'],
+        shadow: ['#020208', '#0a0a18', '#141428']
+      };
+      function sky(bg, w, h) {
+        const c = SKY[bg] || SKY.night;
+        const g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, c[0]); g.addColorStop(.6, c[1]); g.addColorStop(1, c[2]);
+        ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+        if (bg === 'night' || bg === 'bridge') {
+          ctx.fillStyle = '#fff';
+          for (let i = 0; i < 60; i++) { const x = (i * 137.5) % w, y = (i * 61.8) % (h * .5); ctx.globalAlpha = .25 + ((i * 7) % 10) / 18; ctx.fillRect(x, y, 1.6, 1.6); }
+          ctx.globalAlpha = 1;
+        }
+        if (bg === 'dawn') {
+          const s = ctx.createRadialGradient(w * .5, h * .82, 0, w * .5, h * .82, w * .5);
+          s.addColorStop(0, 'rgba(255,190,120,.85)'); s.addColorStop(1, 'rgba(255,120,80,0)');
+          ctx.fillStyle = s; ctx.fillRect(0, 0, w, h);
+        }
+      }
+      function city(w, h, layer, pan, bg) {
+        const base = layer === 0 ? h * .62 : h * .74;
+        const col = layer === 0 ? (bg === 'dawn' ? '#2a1a3a' : '#0d1128') : (bg === 'dawn' ? '#1a0f28' : '#080b1c');
+        ctx.fillStyle = col;
+        const off = pan * w * (layer === 0 ? .3 : .6);
+        for (let i = -1; i < 14; i++) {
+          const bw = w / 10, x = i * bw + off % bw - bw;
+          const hh = (layer === 0 ? .16 : .3) * h * (1 + Math.sin(i * 12.9898 + layer * 4) * .5);
+          ctx.fillRect(x, base - hh, bw * .82, hh + h);
+          if (layer === 1) {
+            ctx.fillStyle = 'rgba(255,214,140,' + (bg === 'dawn' ? .25 : .55) + ')';
+            for (let wy = 0; wy < 5; wy++) for (let wx = 0; wx < 3; wx++) {
+              if ((i * 7 + wy * 3 + wx) % 4 === 0) ctx.fillRect(x + 6 + wx * (bw * .24), base - hh + 8 + wy * 14, 5, 7);
+            }
+            ctx.fillStyle = col;
+          }
+        }
+      }
+      function drawChar(c, w, h, t) {
+        const x = c.x * w, y = (c.y != null ? c.y : .82) * h;
+        const s = (c.s || 1) * h * .22;
+        ctx.save();
+        ctx.translate(x, y);
+        if (c.glow) {
+          const g = ctx.createRadialGradient(0, -s, 0, 0, -s, s * 2.2);
+          g.addColorStop(0, 'rgba(120,220,255,.5)'); g.addColorStop(1, 'rgba(120,220,255,0)');
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, -s, s * 2.2, 0, 7); ctx.fill();
+        }
+        if (c.id === 'core') {
+          const g = ctx.createRadialGradient(0, 0, 0, 0, 0, s);
+          g.addColorStop(0, '#fff8dc'); g.addColorStop(.4, '#ffd76a'); g.addColorStop(1, 'rgba(255,150,60,0)');
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, s, 0, 7); ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(0, 0, s * .55 + Math.sin(t * 6) * 4, 0, 7); ctx.stroke();
+          ctx.restore(); return;
+        }
+        if (c.id === 'kait') {
+          ctx.fillStyle = '#2b3350'; ctx.beginPath(); ctx.arc(0, 0, s * .5, 0, 7); ctx.fill();
+          ctx.strokeStyle = '#66c0f4'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(0, 0, s * .68, t * 2, t * 2 + 4.4); ctx.stroke();
+          ctx.fillStyle = '#9ef0ff'; ctx.beginPath(); ctx.arc(0, 0, s * .18, 0, 7); ctx.fill();
+          ctx.restore(); return;
+        }
+        const skin = c.id === 'collector' ? '#c9c2d8' : '#e8c39a';
+        const cloth = c.id === 'rin' ? '#f43f5e' : c.id === 'collector' ? '#241a33' : '#d8b48a';
+        const hair = c.id === 'rin' ? '#22d3ee' : c.id === 'collector' ? '#12081c' : '#5a3a20';
+        const run = c.pose === 'run' ? Math.sin(t * 10) : 0;
+        // ноги
+        ctx.strokeStyle = '#1a1f2e'; ctx.lineWidth = s * .16; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(0, -s * .5); ctx.lineTo(-s * .18 + run * s * .2, 0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, -s * .5); ctx.lineTo(s * .18 - run * s * .2, 0); ctx.stroke();
+        // тело
+        ctx.fillStyle = cloth;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(-s * .22, -s * 1.05, s * .44, s * .6, s * .1); else ctx.rect(-s * .22, -s * 1.05, s * .44, s * .6);
+        ctx.fill();
+        // руки
+        ctx.strokeStyle = cloth; ctx.lineWidth = s * .13;
+        if (c.pose === 'point') { ctx.beginPath(); ctx.moveTo(0, -s * .95); ctx.lineTo(s * .55, -s * 1.15); ctx.stroke(); }
+        else { ctx.beginPath(); ctx.moveTo(0, -s * .95); ctx.lineTo(-s * .3 - run * s * .15, -s * .55); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, -s * .95); ctx.lineTo(s * .3 + run * s * .15, -s * .55); ctx.stroke(); }
+        // голова
+        ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(0, -s * 1.28, s * .24, 0, 7); ctx.fill();
+        // волосы / маска
+        ctx.fillStyle = hair;
+        ctx.beginPath(); ctx.arc(0, -s * 1.34, s * .25, Math.PI, 0); ctx.fill();
+        if (c.id === 'rin') { ctx.beginPath(); ctx.moveTo(-s * .25, -s * 1.34); ctx.lineTo(-s * .42, -s * 1.05); ctx.lineTo(-s * .18, -s * 1.15); ctx.fill(); }
+        if (c.id === 'collector') { ctx.fillStyle = '#e8e2f5'; ctx.beginPath(); ctx.arc(0, -s * 1.26, s * .17, 0, 7); ctx.fill(); ctx.fillStyle = '#12081c'; ctx.beginPath(); ctx.arc(-s * .06, -s * 1.28, s * .035, 0, 7); ctx.arc(s * .06, -s * 1.28, s * .035, 0, 7); ctx.fill(); }
+        else { ctx.fillStyle = c.glow ? '#9ef0ff' : '#20242e'; ctx.beginPath(); ctx.arc(-s * .08, -s * 1.27, s * .035, 0, 7); ctx.arc(s * .08, -s * 1.27, s * .035, 0, 7); ctx.fill(); }
+        ctx.restore();
+      }
+      function fx(kind, w, h, t, p) {
+        if (kind === 'speed') {
+          ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 1.6;
+          for (let i = 0; i < 26; i++) {
+            const a = (i / 26) * Math.PI * 2 + t * .6;
+            const r0 = Math.max(w, h) * (.32 + ((i * 13) % 10) / 60), r1 = r0 + w * .3;
+            ctx.beginPath(); ctx.moveTo(w / 2 + Math.cos(a) * r0, h / 2 + Math.sin(a) * r0); ctx.lineTo(w / 2 + Math.cos(a) * r1, h / 2 + Math.sin(a) * r1); ctx.stroke();
+          }
+        } else if (kind === 'flash') {
+          ctx.fillStyle = 'rgba(255,255,255,' + Math.max(0, .5 - p * 1.4) + ')'; ctx.fillRect(0, 0, w, h);
+        } else if (kind === 'radial') {
+          const g = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w * .6);
+          g.addColorStop(0, 'rgba(140,240,255,.35)'); g.addColorStop(1, 'rgba(140,240,255,0)');
+          ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+        } else if (kind === 'halftone') {
+          ctx.fillStyle = 'rgba(0,0,0,.25)';
+          for (let y = 0; y < h; y += 6) for (let x = (y / 6 % 2) * 3; x < w; x += 6) ctx.fillRect(x, y, 2, 2);
+        } else if (kind === 'shake') { /* применяется в камере */ }
+      }
+
+      function sceneAt(t) {
+        let acc = 0;
+        for (let i = 0; i < EP.scenes.length; i++) {
+          if (t < acc + EP.scenes[i].d) return { i: i, s: EP.scenes[i], p: (t - acc) / EP.scenes[i].d };
+          acc += EP.scenes[i].d;
+        }
+        return { i: EP.scenes.length - 1, s: EP.scenes[EP.scenes.length - 1], p: 1 };
+      }
+
+      function draw(t) {
+        const w = cv.width, h = cv.height;
+        const sc = sceneAt(t);
+        const cam = sc.s.cam || {};
+        ctx.save();
+        ctx.clearRect(0, 0, w, h);
+        // камера: зум + пан + шейк
+        const shake = (cam.shake || 0) + ((sc.s.fx || []).includes('shake') ? 6 : 0);
+        const zx = (Math.random() - .5) * shake, zy = (Math.random() - .5) * shake;
+        ctx.translate(w / 2 + zx, h / 2 + zy);
+        ctx.scale(cam.z || 1, cam.z || 1);
+        ctx.translate(-w / 2 - (cam.pan || 0) * w * sc.p, -h / 2);
+        sky(sc.s.bg, w, h);
+        if (sc.s.bg !== 'title') {
+          city(w, h, 0, (cam.pan || 0) + t * .004, sc.s.bg);
+          city(w, h, 1, (cam.pan || 0) + t * .004, sc.s.bg);
+        }
+        (sc.s.chars || []).forEach((c) => drawChar(c, w, h, t));
+        ctx.restore();
+        // эффекты поверх
+        (sc.s.fx || []).forEach((f) => fx(f, w, h, t, sc.p));
+        // виньетка
+        const vg = ctx.createRadialGradient(w / 2, h / 2, h * .35, w / 2, h / 2, h * .95);
+        vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)');
+        ctx.fillStyle = vg; ctx.fillRect(0, 0, w, h);
+        // титул
+        if (sc.s.bg === 'title') {
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#f3e8ff';
+          ctx.font = '700 ' + Math.round(h * .085) + 'px system-ui, sans-serif';
+          ctx.fillText('QWEN CHRONICLES', w / 2, h * .44);
+          ctx.fillStyle = '#f43f5e';
+          ctx.font = '500 ' + Math.round(h * .038) + 'px system-ui, sans-serif';
+          ctx.fillText('СЕРИЯ 1 · СИГНАЛ НА РАССВЕТЕ', w / 2, h * .53);
+          ctx.fillStyle = 'rgba(243,232,255,.5)';
+          ctx.font = '400 ' + Math.round(h * .026) + 'px system-ui, sans-serif';
+          ctx.fillText('оригинальный сериал Animix · QwenOS', w / 2, h * .6);
+        }
+        // субтитры
+        if (sc.s.sub) {
+          const a = Math.min(1, sc.p * 6, (1 - sc.p) * 6);
+          ctx.globalAlpha = a;
+          ctx.fillStyle = 'rgba(0,0,0,.62)';
+          ctx.font = '500 ' + Math.round(h * .036) + 'px system-ui, sans-serif';
+          const tw = ctx.measureText(sc.s.sub).width;
+          ctx.fillRect(w / 2 - tw / 2 - 14, h * .88 - h * .035, tw + 28, h * .062);
+          ctx.fillStyle = '#fff';
+          ctx.textAlign = 'center';
+          ctx.fillText(sc.s.sub, w / 2, h * .9);
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      /* ------------------------------------------------ саундтрек */
+      const MODES = { night: [220, 261.6, 329.6], bridge: [196, 233.1, 293.7], dawn: [261.6, 329.6, 392], memory: [246.9, 293.7, 370], shadow: [174.6, 207.7, 261.6], title: [261.6, 392, 523.3] };
+      function music(dt) {
+        st.beat += dt;
+        if (st.beat < 420) return;
+        st.beat = 0;
+        const sc = sceneAt(st.t);
+        const notes = MODES[sc.s.bg] || MODES.night;
+        const c = OS.audio.ctx;
+        if (!c || !OS.settings.get('sound') || OS.settings.get('muted')) return;
+        const t0 = c.currentTime;
+        notes.forEach((f, i) => OS.audio.note(f / 2, t0 + i * .04, .5, 'triangle', .045));
+        if (sc.s.bg === 'bridge' || sc.s.bg === 'shadow') OS.audio.noise(t0, .08, .03, true);
+      }
+
+      /* ------------------------------------------------ цикл плеера */
+      let raf = 0, last = performance.now();
+      function loop(t) {
+        raf = requestAnimationFrame(loop);
+        if (!win.root.isConnected) return;
+        const dt = Math.min(80, t - last); last = t;
+        if (st.playing) {
+          st.t += dt / 1000;
+          music(dt);
+          if (st.t >= EP.total) { st.t = EP.total; setPlaying(false); OS.toast('Animix', 'Серия окончена. Следующая — в производстве', { icon: 'tv' }); }
+        }
+        draw(st.t + (st.playing ? t / 1000 : 0));
+        bar.style.width = (st.t / EP.total * 100).toFixed(2) + '%';
+        timeEl.textContent = fmt(st.t) + ' / ' + fmt(EP.total);
+      }
+      const fmt = (s) => Math.floor(s / 60) + ':' + OS.pad(Math.floor(s % 60));
+      function setPlaying(v) {
+        st.playing = v;
+        playBtn.innerHTML = OS.svg(v ? 'pause' : 'play', 18);
+        if (v) OS.sfx.resume();
+      }
+      timeEl.textContent = '0:00 / ' + fmt(EP.total);
+
+      win.body.querySelector('.anx-ctl').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-a]'); if (!b) return;
+        const a = b.dataset.a;
+        if (a === 'play') setPlaying(!st.playing);
+        else if (a === 'back10') st.t = Math.max(0, st.t - 10);
+        else if (a === 'fwd10') st.t = Math.min(EP.total, st.t + 10);
+        else if (a === 'restart') { st.t = 0; setPlaying(true); }
+      });
+      barWrap.addEventListener('pointerdown', (e) => {
+        const seek = (ev) => {
+          const r = barWrap.getBoundingClientRect();
+          st.t = OS.clamp((ev.clientX - r.left) / r.width, 0, 1) * EP.total;
+        };
+        seek(e);
+        const mv = (ev) => seek(ev);
+        const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); };
+        addEventListener('pointermove', mv); addEventListener('pointerup', up);
+      });
+      const onKey = (e) => {
+        if (!win.root.isConnected || OS.wm.active !== win) return;
+        if (e.key === ' ') { e.preventDefault(); setPlaying(!st.playing); }
+        if (e.key === 'ArrowLeft') st.t = Math.max(0, st.t - 5);
+        if (e.key === 'ArrowRight') st.t = Math.min(EP.total, st.t + 5);
+      };
+      document.addEventListener('keydown', onKey);
+      const onRs = () => sizeCv();
+      win.root.addEventListener('wm:resize', onRs);
+      addEventListener('resize', OS.debounce(onRs, 150));
+      raf = requestAnimationFrame(loop);
+      win.data.state = st;
+      return () => { cancelAnimationFrame(raf); document.removeEventListener('keydown', onKey); removeEventListener('resize', onRs); };
     }
   });
 

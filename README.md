@@ -47,7 +47,9 @@
 
 ![3D-смена курьера: ночной город](docs/assets/screens/work-city.png)
 
-![Counter-Strike на three.js](docs/assets/screens/cs.png)
+![Counter-Strike: Qwen Offensive](docs/assets/screens/cs.png)
+
+![Animix: серия 1 «Qwen Chronicles»](docs/assets/screens/animix.png)
 
 ## Горячие клавиши
 

@@ -248,20 +248,32 @@ async def main():
             (ok if gone else bad)('work 3d: shift closes and returns to bank')
             await page.evaluate("QwenOS.wm.closeAll()")
 
-            # ---- 11g. counter-strike монтируется
+            # ---- 11g. counter-strike: HUD, закупка, броня
             await page.evaluate("QwenOS.wm.open('cs')")
-            await page.wait_for_timeout(900)
+            await page.wait_for_timeout(1000)
             csok = await page.evaluate("!!document.querySelector('.win.focused .cs-hp') && QwenOS.wm.byApp('cs')[0].data.state.hp === 100")
             (ok if csok else bad)('cs: mounted with HUD and full HP')
-            await page.keyboard.press('r')
+            await page.keyboard.press('b')
+            await page.wait_for_timeout(400)
+            buyopen = await page.evaluate("!document.querySelector('.win.focused .cs-buy').classList.contains('hidden')")
+            (ok if buyopen else bad)('cs: buy menu opens with B')
+            await page.click('.win.focused .cs-bi[data-w="kevlar"]')
+            await page.wait_for_timeout(300)
+            arm = await page.evaluate("QwenOS.wm.byApp('cs')[0].data.api.M.armor")
+            mon = await page.evaluate("QwenOS.wm.byApp('cs')[0].data.api.M.money")
+            (ok if arm == 100 and mon == 150 else bad)(f'cs: kevlar bought (armor={arm}, money={mon})')
+            await page.keyboard.press('b')
             await page.wait_for_timeout(200)
             await page.evaluate("QwenOS.wm.closeAll()")
 
-            # ---- 11h. animix пустая витрина
+            # ---- 11h. animix: плеер серии 1
             await page.evaluate("QwenOS.wm.open('animix')")
-            await page.wait_for_timeout(500)
-            anx = await page.evaluate("!!document.querySelector('.win.focused .anx-empty')")
-            (ok if anx else bad)('animix: empty catalog placeholder')
+            await page.wait_for_timeout(600)
+            await page.click('.win.focused [data-a="play"]')
+            await page.wait_for_timeout(1500)
+            t1 = await page.evaluate("QwenOS.wm.byApp('animix')[0].data.state.t")
+            (ok if t1 > 0.5 else bad)(f'animix: episode plays (t={round(t1, 1)})')
+            await page.click('.win.focused [data-a="play"]')
             await page.evaluate("QwenOS.wm.closeAll()")
 
             # ---- 12. пуск: поиск + Enter
