@@ -446,6 +446,26 @@
         raf = requestAnimationFrame(draw);
       }, 'эффект «Матрицы»');
 
+      def('update', (args) => {
+        const U = OS.updater;
+        if (!U) return text('update: центр обновлений недоступен', 't-err');
+        const mode = args[0] || 'check';
+        if (mode === 'demo') { text('Демонстрация экрана установки…', 't-ok'); U.demo(); return; }
+        if (mode === 'install') {
+          if (!U.pending) return text('update: нет загруженного обновления (сначала update check)', 't-warn');
+          text('Установка обновления сборки ' + U.pending.build + '…', 't-ok');
+          U.install(U.pending);
+          return;
+        }
+        text('Проверка сервера обновлений…', 't-dim');
+        U.check({}).then((r) => {
+          if (r) {
+            print(c('t-ok', 'Доступно обновление: сборка ' + r.build + ' (' + (r.version || OS.version) + ')'));
+            print(c('t-dim', 'Установите командой: ') + c('t-cmd', 'update install') + c('t-dim', ' или через уведомление.'));
+          } else print(c('t-ok', 'Обновлений нет. Текущая сборка: ' + U.current.build));
+        });
+      }, 'проверить/установить обновления [check|install|demo]');
+
       def('reboot', () => { text('Перезагрузка…', 't-warn'); setTimeout(() => OS.power.reboot(), 600); }, 'перезагрузить систему');
       def('shutdown', () => { text('Завершение работы…', 't-warn'); setTimeout(() => OS.power.shutdown(), 600); }, 'выключить');
       def('lock', () => OS.power.lock(), 'заблокировать экран');

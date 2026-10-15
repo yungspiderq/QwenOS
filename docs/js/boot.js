@@ -161,6 +161,7 @@
     OS.perf.start();
     bindShortcuts();
     bindMisc();
+    if (OS.updater) OS.updater.init();
     OS.bus.emit('os:ready');
 
     // глубокая ссылка: index.html?app=terminal
@@ -268,8 +269,14 @@
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then((reg) => {
-          reg.addEventListener('updatefound', () => OS.toast('Обновление QwenOS', 'Загружается новая версия системы', { icon: 'download', timeout: 4000 }));
-        }).catch(() => { /*离线 режим — не критично */ });
+          reg.addEventListener('updatefound', () => {
+            const nw = reg.installing;
+            if (!nw) return;
+            nw.addEventListener('statechange', () => {
+              if (nw.state === 'installed' && navigator.serviceWorker.controller && OS.updater) OS.updater.swUpdate();
+            });
+          });
+        }).catch(() => { /* офлайн режим — не критично */ });
       });
     }
 

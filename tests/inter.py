@@ -231,6 +231,29 @@ async def main():
             (ok)('music play toggled without errors')
             await page.evaluate("QwenOS.wm.closeAll()")
 
+            # ---- 19. центр обновлений: уведомление и демо-установка
+            await page.evaluate("QwenOS.updater.showPopup({version:'9.9.9', build:9999, notes:['Тестовое обновление']})")
+            await page.wait_for_timeout(500)
+            pv = await page.evaluate("!!document.querySelector('.upd-popup')")
+            (ok if pv else bad)('updater: popup shown')
+            await page.click('.upd-popup [data-a="later"]')
+            await page.wait_for_timeout(500)
+            pv2 = await page.evaluate("!document.querySelector('.upd-popup')")
+            (ok if pv2 else bad)('updater: popup dismissed')
+            await page.evaluate("QwenOS.updater.demo()")
+            saw = True
+            try:
+                await page.wait_for_selector('.upd-screen', timeout=5000)
+            except Exception:
+                saw = False
+            (ok if saw else bad)('updater: install screen appears')
+            done = True
+            try:
+                await page.wait_for_selector('.upd-screen', state='detached', timeout=25000)
+            except Exception:
+                done = False
+            (ok if done else bad)('updater: demo finishes without reload')
+
             # ---- 18. блокировка и разблокировка
             await page.keyboard.press('Control+Alt+KeyL')
             await page.wait_for_timeout(500)

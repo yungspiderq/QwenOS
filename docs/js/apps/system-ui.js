@@ -23,6 +23,7 @@
         { id: 'desktop', name: 'Рабочий стол', icon: 'monitor' },
         { id: 'sound', name: 'Звук', icon: 'volume' },
         { id: 'account', name: 'Аккаунт', icon: 'user' },
+        { id: 'update', name: 'Обновления', icon: 'refresh' },
         { id: 'system', name: 'Система', icon: 'cpu' },
         { id: 'about', name: 'О системе', icon: 'info' }
       ];
@@ -165,6 +166,31 @@
           box2.querySelector('[data-act="off"]').onclick = () => OS.power.shutdown();
 
           box.querySelector('[data-act="clearpass"]').onclick = () => { S.set('password', ''); render(); OS.toast('Пароль снят', 'Вход теперь без пароля', { icon: 'lock' }); };
+        },
+
+        update(w) {
+          const U = OS.updater;
+          w.insertAdjacentHTML('beforeend', h('Центр обновлений'));
+          const box = OS.el('div', { class: 'set-box' });
+          const last = U.lastCheck ? OS.fmtDateTime(U.lastCheck) : 'ещё не выполнялась';
+          box.innerHTML =
+            row('Текущая сборка', 'QwenOS ' + OS.version + ' · канал ' + ((U.remote && U.remote.channel) || 'stable'), '<b>' + U.current.build + '</b>') +
+            row('Последняя проверка', last, U.checking ? '<span class="chip">идёт…</span>' : '<button class="btn btn-sm" data-act="chk">' + OS.svg('refresh', 14) + ' Проверить</button>') +
+            row('Доступно обновление', U.pending ? ('сборка ' + U.pending.build) : 'нет', U.pending ? '<button class="btn btn-sm btn-accent" data-act="inst">Установить</button>' : '<span class="chip">' + OS.svg('shield', 12) + ' всё актуально</span>') +
+            row('Автопроверка', 'Каждые 5 минут, при возврате во вкладку и при запуске', '<span class="switch on" title="включено"></span>') +
+            row('Демонстрация', 'Показать экран установки с анимацией без перезапуска', '<button class="btn btn-sm" data-act="demo">' + OS.svg('play', 14) + ' Демо</button>');
+          w.append(box);
+          box.querySelector('[data-act="chk"]').onclick = async (e) => {
+            e.target.disabled = true;
+            const r = await U.check({});
+            e.target.disabled = false;
+            render();
+            if (r) OS.toast('Найдено обновление', 'Сборка ' + r.build, { icon: 'download' });
+          };
+          const ib = box.querySelector('[data-act="inst"]');
+          if (ib) ib.onclick = () => U.install(U.pending);
+          box.querySelector('[data-act="demo"]').onclick = () => U.demo();
+          w.insertAdjacentHTML('beforeend', '<div class="set-note">' + OS.svg('info', 14) + ' Обновления распространяются через GitHub Pages: система сравнивает номер сборки в <code>version.json</code> и, если он больше текущего, предлагает установку. Файлы предварительно загружаются в кэш service worker, поэтому перезапуск почти мгновенный.</div>');
         },
 
         system(w) {
